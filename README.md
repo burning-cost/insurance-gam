@@ -102,6 +102,14 @@ tests/
 └── pin/     # 136 tests
 ```
 
+## Source repos
+
+This package consolidates three previously separate libraries:
+
+- `insurance-ebm` — archived, merged into `insurance_gam.ebm`
+- `insurance-anam` — archived, merged into `insurance_gam.anam`
+- `insurance-pin` — archived, merged into `insurance_gam.pin`
+
 ## References
 
 - Laub, Pho, Wong (2025). "An Interpretable Deep Learning Model for General Insurance Pricing." arXiv:2509.08467.
