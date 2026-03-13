@@ -10,11 +10,39 @@ GLMs have been the industry standard for decades. They're interpretable, well-un
 
 Wraps [interpretML's](https://github.com/interpretml/interpret) `ExplainableBoostingRegressor` with insurance-specific tooling: exposure-aware fit/predict, relativity table extraction, post-fit monotonicity enforcement, and GLM comparison tools. If you want the interpretability of a GLM with the predictive power of a gradient booster, start here.
 
+Requires the `[ebm]` extra: `pip install "insurance-gam[ebm]"`
+
 ```python
+import numpy as np
+import polars as pl
 from insurance_gam.ebm import InsuranceEBM, RelativitiesTable
 
+rng = np.random.default_rng(42)
+n = 1000
+
+df = pl.DataFrame({
+    "vehicle_age":  rng.integers(0, 15, n).astype(float),
+    "driver_age":   rng.integers(17, 75, n).astype(float),
+    "ncd_years":    rng.integers(0, 10, n).astype(float),
+    "annual_miles": rng.integers(3000, 20000, n).astype(float),
+    "area":         rng.integers(0, 5, n).astype(float),
+})
+exposure = rng.uniform(0.3, 1.0, n)
+# Poisson frequency: base rate 0.08, higher for young drivers and old vehicles
+log_rate = (
+    -2.5
+    + 0.03 * df["driver_age"].to_numpy().clip(None, 25) * (df["driver_age"].to_numpy() < 25)
+    - 0.02 * df["ncd_years"].to_numpy()
+    + 0.04 * (df["vehicle_age"].to_numpy() > 8).astype(float)
+)
+y = rng.poisson(np.exp(log_rate) * exposure)
+
+X_train, X_test = df[:800], df[800:]
+y_train, y_test = y[:800], y[800:]
+exp_train, exp_test = exposure[:800], exposure[800:]
+
 model = InsuranceEBM(loss="poisson", interactions="3x")
-model.fit(X_train, y_train, exposure=exposure_train)
+model.fit(X_train, y_train, exposure=exp_train)
 
 rt = RelativitiesTable(model)
 print(rt.table("driver_age"))
@@ -25,15 +53,36 @@ print(rt.summary())
 
 Neural Additive Model (Laub, Pho, Wong 2025) adapted for insurance. One MLP subnetwork per feature, additive aggregation, Poisson/Tweedie/Gamma losses, and Dykstra-projected monotonicity constraints. Beats GLMs on deviance metrics while producing per-feature shape functions that a pricing team can actually inspect.
 
+Requires the `[neural]` extra: `pip install "insurance-gam[neural]"`
+
 ```python
+import numpy as np
+import polars as pl
 from insurance_gam.anam import ANAM
+
+rng = np.random.default_rng(42)
+n = 1000
+
+df = pl.DataFrame({
+    "vehicle_age":  rng.integers(0, 15, n).astype(float),
+    "driver_age":   rng.integers(17, 75, n).astype(float),
+    "ncd_years":    rng.integers(0, 10, n).astype(float),
+    "annual_miles": rng.integers(3000, 20000, n).astype(float),
+})
+exposure = rng.uniform(0.3, 1.0, n)
+log_rate = (
+    -2.5
+    - 0.02 * df["ncd_years"].to_numpy()
+    + 0.04 * (df["vehicle_age"].to_numpy() > 8).astype(float)
+)
+y = rng.poisson(np.exp(log_rate) * exposure).astype(float)
 
 model = ANAM(
     loss="poisson",
     monotone_increasing=["vehicle_age", "driver_age"],
     n_epochs=100,
 )
-model.fit(X_train, y_train, sample_weight=exposure_train)
+model.fit(df, y, sample_weight=exposure)
 
 shapes = model.shape_functions()
 shapes["vehicle_age"].plot()
@@ -43,19 +92,42 @@ shapes["vehicle_age"].plot()
 
 Neural GA2M (Richman, Scognamiglio, Wüthrich 2025). The prediction decomposes as a sum of pairwise interaction terms — one shared network serving all feature pairs, differentiated by learned interaction tokens. Diagonal terms recover main effects. Captures interactions a GLM would miss while keeping the output interpretable as a sum of 2D shape functions.
 
+Requires the `[neural]` extra: `pip install "insurance-gam[neural]"`
+
 ```python
+import numpy as np
+import polars as pl
 from insurance_gam.pin import PINModel
 
+rng = np.random.default_rng(42)
+n = 1000
+
+df = pl.DataFrame({
+    "driver_age":  rng.integers(17, 75, n).astype(float),
+    "vehicle_age": rng.integers(0, 15, n).astype(float),
+    "area":        rng.integers(0, 5, n),
+    "ncd_years":   rng.integers(0, 10, n).astype(float),
+})
+exposure = rng.uniform(0.3, 1.0, n)
+log_rate = (
+    -2.5
+    - 0.02 * df["ncd_years"].to_numpy()
+    + 0.04 * (df["vehicle_age"].to_numpy() > 8).astype(float)
+)
+y = rng.poisson(np.exp(log_rate) * exposure).astype(float)
+
 model = PINModel(
-    features={"driver_age": "continuous", "vehicle_age": "continuous", "area": 5},
+    features={"driver_age": "continuous", "vehicle_age": "continuous", "area": 5, "ncd_years": "continuous"},
     loss="poisson",
     max_epochs=200,
 )
-model.fit(X_train, y_train, exposure=exposure_train)
+model.fit(df, y, exposure=exposure)
 
 # Inspect which feature pairs matter
 weights = model.interaction_weights()
-effects = model.main_effects(X_background)
+
+# Main effect curves — pass the training data as background
+effects = model.main_effects(df)
 ```
 
 ## Installation
