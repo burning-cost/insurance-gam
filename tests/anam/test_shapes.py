@@ -122,44 +122,44 @@ class TestShapeFunction:
 
 
 class TestExtractShapeFunctions:
-    def test_extract_returns_all_features(self, trained_anam, synthetic_data):
+    def test_extract_returns_all_features(self, trained_anam, anam_synthetic_data):
         """extract_shape_functions should return one ShapeFunction per feature."""
         shapes = extract_shape_functions(
-            trained_anam, synthetic_data["X"], n_points=50
+            trained_anam, anam_synthetic_data["X"], n_points=50
         )
         feature_names = {"driver_age", "vehicle_age", "ncd", "region", "vehicle_type"}
         assert set(shapes.keys()) == feature_names
 
-    def test_continuous_shape_n_points(self, trained_anam, synthetic_data):
+    def test_continuous_shape_n_points(self, trained_anam, anam_synthetic_data):
         """Continuous shape functions should have n_points values."""
         shapes = extract_shape_functions(
-            trained_anam, synthetic_data["X"], n_points=100
+            trained_anam, anam_synthetic_data["X"], n_points=100
         )
         assert len(shapes["driver_age"].x_values) == 100
         assert len(shapes["driver_age"].f_values) == 100
 
-    def test_categorical_shape_has_all_categories(self, trained_anam, synthetic_data):
+    def test_categorical_shape_has_all_categories(self, trained_anam, anam_synthetic_data):
         """Categorical shape should have one value per observed category."""
         shapes = extract_shape_functions(
-            trained_anam, synthetic_data["X"], n_points=100
+            trained_anam, anam_synthetic_data["X"], n_points=100
         )
         region_shape = shapes["region"]
         # Region has 4 categories (0, 1, 2, 3)
         assert len(region_shape.x_values) == 4
 
-    def test_shape_values_finite(self, trained_anam, synthetic_data):
+    def test_shape_values_finite(self, trained_anam, anam_synthetic_data):
         """All shape function values should be finite."""
         shapes = extract_shape_functions(
-            trained_anam, synthetic_data["X"], n_points=50
+            trained_anam, anam_synthetic_data["X"], n_points=50
         )
         for name, sf in shapes.items():
             assert np.isfinite(sf.f_values).all(), f"Non-finite values in {name}"
 
-    def test_shape_with_category_labels(self, trained_anam, synthetic_data):
+    def test_shape_with_category_labels(self, trained_anam, anam_synthetic_data):
         """Category labels should be attached when provided."""
         labels = {"region": {0: "London", 1: "North", 2: "Midlands", 3: "Scotland"}}
         shapes = extract_shape_functions(
-            trained_anam, synthetic_data["X"], n_points=50,
+            trained_anam, anam_synthetic_data["X"], n_points=50,
             category_labels=labels
         )
         sf = shapes["region"]
@@ -168,13 +168,13 @@ class TestExtractShapeFunctions:
 
 
 class TestPlotAllShapes:
-    def test_plot_all_returns_figure(self, trained_anam, synthetic_data):
+    def test_plot_all_returns_figure(self, trained_anam, anam_synthetic_data):
         """plot_all_shapes should return a matplotlib Figure."""
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         shapes = extract_shape_functions(
-            trained_anam, synthetic_data["X"], n_points=30
+            trained_anam, anam_synthetic_data["X"], n_points=30
         )
         fig = plot_all_shapes(shapes)
         assert fig is not None

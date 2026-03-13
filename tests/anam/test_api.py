@@ -205,9 +205,9 @@ class TestANAMFit:
         model.fit(X, y, sample_weight=exp)
         assert model.scaler_ is None
 
-    def test_categorical_feature_handled(self, synthetic_data):
+    def test_categorical_feature_handled(self, anam_synthetic_data):
         """Categorical features should be handled via auto-config."""
-        data = synthetic_data
+        data = anam_synthetic_data
         model = ANAM(
             feature_names=["driver_age", "vehicle_age", "ncd", "region", "vehicle_type"],
             categorical_features=["region", "vehicle_type"],

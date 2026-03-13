@@ -109,13 +109,13 @@ def _generate_synthetic_insurance(
 
 
 @pytest.fixture(scope="session")
-def synthetic_data():
+def anam_synthetic_data():
     """Full synthetic dataset (2000 observations)."""
     return _generate_synthetic_insurance(n=2000, seed=SEED)
 
 
 @pytest.fixture(scope="session")
-def small_synthetic_data():
+def anam_small_synthetic_data():
     """Small synthetic dataset for fast unit tests (200 observations)."""
     return _generate_synthetic_insurance(n=200, seed=SEED + 1)
 
@@ -152,7 +152,7 @@ def small_anam_model(feature_configs):
 
 
 @pytest.fixture(scope="session")
-def trained_anam(synthetic_data, feature_configs):
+def trained_anam(anam_synthetic_data, feature_configs):
     """Quickly trained ANAM (few epochs) for integration tests."""
     from insurance_gam.anam.model import ANAMModel
     from insurance_gam.anam.trainer import ANAMTrainer, TrainingConfig
@@ -174,6 +174,6 @@ def trained_anam(synthetic_data, feature_configs):
         device="cpu",
     )
     trainer = ANAMTrainer(model, config)
-    data = synthetic_data
+    data = anam_synthetic_data
     trainer.fit(data["X"], data["y"], exposure=data["exposure"])
     return trainer.model

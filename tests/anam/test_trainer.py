@@ -95,7 +95,7 @@ class TestANAMTrainer:
         history = trainer.fit(X, y, exposure=exp)
         assert history.stopped_early or len(history.train_loss) <= 50
 
-    def test_monotonicity_preserved_after_training(self, synthetic_data, feature_configs):
+    def test_monotonicity_preserved_after_training(self, anam_synthetic_data, feature_configs):
         """After training with monotone constraints, predictions should be monotone."""
         from insurance_gam.anam.model import ANAMModel
 
@@ -114,7 +114,7 @@ class TestANAMTrainer:
             lambda_l2=0.0,
         )
         trainer = ANAMTrainer(model, config)
-        data = synthetic_data
+        data = anam_synthetic_data
         trainer.fit(data["X"], data["y"], exposure=data["exposure"])
 
         # vehicle_age is monotone increasing
