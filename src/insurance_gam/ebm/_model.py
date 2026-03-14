@@ -8,6 +8,7 @@ fit/predict, polars DataFrame support, and deviance scoring.
 """
 
 from __future__ import annotations
+import re
 
 from typing import Optional, Union
 
@@ -114,8 +115,10 @@ class InsuranceEBM:
         Tweedie variance power. Only used when loss='tweedie'. Set to 1.0 for
         Poisson, 2.0 for Gamma, 1.5 for compound Poisson-Gamma (pure premium).
     interactions : int or str
-        Number of pairwise interaction terms, or '3x' to let the EBM pick
-        approximately 3 * n_features terms via FAST interaction detection.
+        Number of pairwise interaction terms, or a multiplier string of the form
+        ``'Nx'`` (e.g. ``'3x'``, ``'1x'``) meaning ``N * n_features`` interaction
+        terms. ``'3x'`` is the default and usually works well. Use ``0`` or ``'0x'``
+        to disable interactions entirely (reduces memory and training time).
         Passed through to ExplainableBoostingRegressor as ``interactions``.
     monotone_constraints : dict, optional
         Mapping of {feature_name: direction} where direction is +1 (increasing)
@@ -152,9 +155,16 @@ class InsuranceEBM:
 
     def _build_ebm(self, feature_names: list) -> ExplainableBoostingRegressor:
         """Instantiate the underlying EBM with appropriate settings."""
-        # Resolve interactions: '3x' means 3 * n_features
-        if self.interactions == "3x":
-            n_interactions = 3 * len(feature_names)
+        # Resolve interactions: 'Nx' means N * n_features (e.g. '3x', '1x', '0x')
+        if isinstance(self.interactions, str):
+            m = re.match(r'^(\d+)x$', self.interactions)
+            if m:
+                n_interactions = int(m.group(1)) * len(feature_names)
+            else:
+                raise ValueError(
+                    f"interactions string must be of the form 'Nx' (e.g. '3x', '1x'), "
+                    f"got {self.interactions!r}"
+                )
         else:
             n_interactions = int(self.interactions)
 
