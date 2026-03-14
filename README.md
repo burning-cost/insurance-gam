@@ -209,3 +209,12 @@ The benchmark measures Poisson deviance, Gini, and double-lift chart on the held
 - Laub, Pho, Wong (2025). "An Interpretable Deep Learning Model for General Insurance Pricing." arXiv:2509.08467.
 - Richman, Scognamiglio, Wüthrich (2025). "Tree-like Pairwise Interaction Networks." arXiv:2508.15678.
 - Lou, Caruana, Gehrke, Hooker (2013). "Accurate intelligible models with pairwise interactions." KDD.
+
+## Related Libraries
+
+| Library | What it does |
+|---------|-------------|
+| [insurance-glm-tools](https://github.com/burning-cost/insurance-glm-tools) | GLM tooling including R2VF factor merging — combines naturally with GAM shape functions for the rating factor pipeline |
+| [insurance-distributional-glm](https://github.com/burning-cost/insurance-distributional-glm) | GAMLSS — extends GAMs to model dispersion and shape parameters as smooth functions of covariates |
+| [insurance-interactions](https://github.com/burning-cost/insurance-interactions) | GLM interaction detection — identify where the additive GAM structure needs interaction terms |
+
