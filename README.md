@@ -204,6 +204,11 @@ The benchmark measures Poisson deviance, Gini, and double-lift chart on the held
 **When NOT to use:** When the portfolio has strong multiplicative interactions between rating factors that an additive model cannot capture. The EBM handles pairwise interactions via interaction terms, but the hierarchy is still additive and cannot represent three-way interactions without explicit specification.
 
 
+
+## Databricks Notebook
+
+A ready-to-run Databricks notebook benchmarking this library against standard approaches is available in [burning-cost-examples](https://github.com/burning-cost/burning-cost-examples/blob/main/notebooks/insurance_gam_demo.py).
+
 ## References
 
 - Laub, Pho, Wong (2025). "An Interpretable Deep Learning Model for General Insurance Pricing." arXiv:2509.08467.
