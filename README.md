@@ -4,6 +4,49 @@ Interpretable GAM toolkit for insurance pricing. Three modelling approaches, one
 
 GLMs have been the industry standard for decades. They're interpretable, well-understood, and regulators like them. But they leave predictive power on the table — particularly on non-linear effects and interactions. This package gives pricing actuaries three production-grade alternatives that sit between a GLM and a black-box gradient booster: all interpretable, all exposure-aware, all tested against realistic insurance data.
 
+## Quick Start
+
+```bash
+pip install "insurance-gam[ebm]"
+```
+
+```python
+import numpy as np
+import polars as pl
+from insurance_gam.ebm import InsuranceEBM, RelativitiesTable
+
+rng = np.random.default_rng(42)
+n = 2000
+
+df = pl.DataFrame({
+    "driver_age":   rng.integers(17, 75, n).astype(float),
+    "vehicle_age":  rng.integers(0, 15, n).astype(float),
+    "ncd_years":    rng.integers(0, 9, n).astype(float),
+    "annual_miles": rng.integers(3000, 20000, n).astype(float),
+    "area":         rng.integers(0, 5, n).astype(float),
+})
+exposure = rng.uniform(0.3, 1.0, n)
+log_rate = (
+    -2.5
+    + 0.5 * (df["driver_age"].to_numpy() < 25).astype(float)   # young driver load
+    - 0.12 * df["ncd_years"].to_numpy()                         # NCD discount
+    + 0.3 * (df["vehicle_age"].to_numpy() > 10).astype(float)   # old vehicle load
+)
+y = rng.poisson(np.exp(log_rate) * exposure)
+
+model = InsuranceEBM(loss="poisson", interactions="3x")
+model.fit(df[:1600], y[:1600], exposure=exposure[:1600])
+
+rt = RelativitiesTable(model)
+# Per-feature relativities — readable table a pricing team can challenge factor by factor
+print(rt.table("ncd_years"))
+# shape_value  relativity
+# 0.0          1.000
+# 3.0          0.694
+# 9.0          0.340
+print(rt.summary())
+```
+
 ## What's inside
 
 ### `insurance_gam.ebm` — Explainable Boosting Machine
