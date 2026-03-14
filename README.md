@@ -1,5 +1,11 @@
 # insurance-gam
 
+[![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/)
+[![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]()
+[![License](https://img.shields.io/badge/license-BSD--3-blue)]()
+
+
 Interpretable GAM toolkit for insurance pricing. Three modelling approaches, one package.
 
 GLMs have been the industry standard for decades. They're interpretable, well-understood, and regulators like them. But they leave predictive power on the table — particularly on non-linear effects and interactions. This package gives pricing actuaries three production-grade alternatives that sit between a GLM and a black-box gradient booster: all interpretable, all exposure-aware, all tested against realistic insurance data.
@@ -245,7 +251,6 @@ The benchmark measures Poisson deviance, Gini, and double-lift chart on the held
 **When to use:** When a GBM clearly beats the production GLM but post-hoc explanation (SHAP-relativities, surrogate models) is creating noise in pricing committee sign-offs. The EBM offers comparable or better predictive performance than a GLM with hand-crafted interactions, with a shape function per feature rather than a coefficient per dummy level.
 
 **When NOT to use:** When the portfolio has strong multiplicative interactions between rating factors that an additive model cannot capture. The EBM handles pairwise interactions via interaction terms, but the hierarchy is still additive and cannot represent three-way interactions without explicit specification.
-
 
 
 ## Databricks Notebook
