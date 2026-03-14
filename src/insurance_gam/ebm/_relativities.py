@@ -29,7 +29,7 @@ def _get_ebm_shape(ebm, feature: str) -> tuple[np.ndarray, np.ndarray]:
     representations of the bin intervals or category values.
     """
     try:
-        feature_idx = ebm.feature_names_in_.tolist().index(feature)
+        feature_idx = list(ebm.feature_names_in_).index(feature)
     except ValueError:
         raise ValueError(
             f"Feature '{feature}' not found in model. "
@@ -82,7 +82,7 @@ def _modal_bin_idx(ebm, feature: str) -> int:
     Falls back to zero-score bin (the intercept bin) if weights are unavailable.
     """
     try:
-        feature_idx = ebm.feature_names_in_.tolist().index(feature)
+        feature_idx = list(ebm.feature_names_in_).index(feature)
         weights = ebm.term_bin_weights_[feature_idx]
         # weights includes the missing-value bin as the last element; exclude it
         main_weights = weights[:-1] if len(weights) > 1 else weights
