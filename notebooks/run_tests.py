@@ -1,9 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # insurance-gam test runner
-# MAGIC
-# MAGIC Runs the full test suite for all three subpackages (EBM, ANAM, PIN).
-# MAGIC 442 tests expected to pass.
 
 # COMMAND ----------
 
@@ -11,21 +8,29 @@
 
 # COMMAND ----------
 
-import subprocess, sys, os, shutil
+import subprocess, sys, os, shutil, uuid
 
-# Copy to /tmp to avoid __pycache__ write failures on workspace FS
+run_id = str(uuid.uuid4())[:8]
 src = "/Workspace/insurance-gam"
-dst = "/tmp/insurance-gam"
-if os.path.exists(dst):
-    shutil.rmtree(dst)
-shutil.copytree(src, dst)
+dst = f"/tmp/insurance-gam-{run_id}"
+
+SKIP = {".venv", ".git", "__pycache__", ".pytest_cache"}
+
+def _ignore(directory, contents):
+    ignored = set()
+    for item in contents:
+        if item in SKIP or item.endswith(".egg-info") or item.endswith(".pyc"):
+            ignored.add(item)
+    return ignored
+
+shutil.copytree(src, dst, ignore=_ignore)
+print(f"Copied {src} -> {dst}")
 
 result = subprocess.run(
     [sys.executable, "-m", "pip", "install", "-e", dst],
     capture_output=True, text=True, cwd=dst,
     env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
 )
-print(result.stdout[-1000:])
 if result.returncode != 0:
     print("STDERR:", result.stderr[-500:])
     raise RuntimeError("pip install failed")
@@ -40,14 +45,14 @@ env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
 result = subprocess.run(
     [sys.executable, "-m", "pytest",
      "tests/ebm/", "tests/anam/", "tests/pin/",
-     "-v", "--tb=short", "--no-header",
+     "-v", "--tb=short", "--no-header", "--color=no",
     ],
     capture_output=True, text=True,
-    cwd="/tmp/insurance-gam/",
+    cwd=dst,
     env=env,
 )
 output = result.stdout + result.stderr
-print(output[-12000:] if len(output) > 12000 else output)
-print(f"\nReturn code: {result.returncode}")
-assert result.returncode == 0, "Tests failed!"
-print("\nAll tests PASSED.")
+
+# Use dbutils.notebook.exit to return the output as the notebook result
+# This is the correct way to pass output back through the Jobs API
+dbutils.notebook.exit(output[-20000:] if len(output) > 20000 else output)

@@ -378,14 +378,8 @@ class PINModel(nn.Module):
 
         n = y_t.shape[0]
 
-        # Initialise bias to log(mean_frequency) for numerical stability.
-        # This ensures initial predictions are in the right ballpark and
-        # prevents exploding gradients in the first few batches.
-        with torch.no_grad():
-            mean_freq = y_t.mean().clamp(min=1e-8)
-            self.output_bias.fill_(torch.log(mean_freq).item())
-
-        # Build or reserve validation set
+        # Build or reserve validation set (must happen before bias init so we
+        # use training-only data for the mean frequency estimate).
         if X_val is not None:
             x_val_dict = self._prepare_features(X_val)
             x_val_dict = self._to_device_dict(x_val_dict)
@@ -411,6 +405,14 @@ class PINModel(nn.Module):
             exp_t = exp_t[train_idx]
 
         n_train = y_t.shape[0]
+
+        # Initialise bias to log(mean_frequency) of the TRAINING split only.
+        # Computing this from the full dataset (including validation) would
+        # be a mild form of data leakage — small in practice but wrong in
+        # principle. We compute it here, after the split.
+        with torch.no_grad():
+            mean_freq = y_t.mean().clamp(min=1e-8)
+            self.output_bias.fill_(torch.log(mean_freq).item())
 
         optimizer = optim.Adam(self.parameters(), lr=self.lr)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(

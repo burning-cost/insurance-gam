@@ -146,3 +146,69 @@ class TestExcelExport:
         rt = RelativitiesTable(fitted_poisson_model)
         with pytest.raises(ImportError, match="openpyxl"):
             rt.export_excel(tmp_path / "test.xlsx")
+
+
+class TestP01ModalBinIdxRegression:
+    """Regression tests for P0-1: _modal_bin_idx sliced wrong end of weights array.
+
+    interpretML places the missing-value bin at index 0, not the end.
+    The fix is weights[1:] (skip index-0 missing bin) not weights[:-1].
+    """
+
+    def test_modal_bin_skips_index_zero_not_last(self, fitted_poisson_model):
+        """Modal bin index must correspond to the highest-weight real bin.
+
+        The mock EBM has weights [5.0, 20.0, 25.0, 30.0, 20.0, 10.0] where
+        index 0 is the missing bin (weight=5.0). The modal real bin is at
+        index 3 (weight=30.0) within the full array, i.e. index 2 within
+        weights[1:]. After argmax over weights[1:] = [20,25,30,20,10],
+        argmax=2, so the returned index should be 3 (= 2 + 1 offset when
+        RelativitiesTable clips to the scores array, which has 5 elements
+        from explain_global returning scores[1:]).
+
+        The scores array from the mock has 5 bins (explain_global skips the
+        missing bin in the name/scores it returns), so base_idx must be
+        in 0..4 and point to the bin with weight 30.0.
+        """
+        from insurance_gam.ebm._relativities import _modal_bin_idx
+        ebm = fitted_poisson_model.ebm_
+
+        # weights[1:] = [20, 25, 30, 20, 10] -> argmax = 2
+        # weights[:-1] = [5, 20, 25, 30, 20] -> argmax = 3 (old, wrong result)
+        idx = _modal_bin_idx(ebm, "driver_age")
+        assert idx == 2, (
+            f"Expected modal bin index 2 (argmax of weights[1:]), got {idx}. "
+            "This suggests the old weights[:-1] bug is still present."
+        )
+
+    def test_base_bin_has_relativity_one_after_fix(self, fitted_poisson_model):
+        """The base bin (highest weight) must have relativity == 1.0."""
+        rt = RelativitiesTable(fitted_poisson_model)
+        df = rt.table("driver_age")
+        rels = df["relativity"].to_numpy()
+        assert np.any(np.isclose(rels, 1.0, atol=1e-6)), (
+            "No bin has relativity=1.0 — base bin selection is broken."
+        )
+
+    def test_missing_bin_not_chosen_as_base(self, fitted_poisson_model):
+        """Index 0 of weights (missing-value bin) must never be the base.
+
+        Before the fix, weights[:-1] excluded the last bin. With the interpretML
+        convention of missing bin at index 0, this meant index 0 (missing) was
+        included in argmax, and a low-frequency missing bin could be chosen as
+        the base level — wrong for a rating table.
+        """
+        from insurance_gam.ebm._relativities import _modal_bin_idx
+        ebm = fitted_poisson_model.ebm_
+        # For our mock, weights[0]=5.0 is the lowest weight.
+        # weights[1:] = [20,25,30,20,10] -> argmax=2 (real bin index 2)
+        # If index 0 were returned, that would mean the missing bin was chosen.
+        idx = _modal_bin_idx(ebm, "driver_age")
+        # The returned index is used to index into the scores array (len 5).
+        # Index 0 of the scores array corresponds to weights[1] (the first real bin).
+        # weights[0] is missing bin; if idx==0, scores[0] is real bin 1 -- acceptable.
+        # But the bug was that the OLD code could return index 3 (the 30.0 bin under
+        # weights[:-1]) vs index 2 (the 30.0 bin under weights[1:]).
+        # The modal bin weight is 30.0 at weights[3]; in the scores array this maps to
+        # scores index = 3 - 1 = 2 (explain_global returns scores[1:]).
+        assert idx == 2, f"Expected 2, got {idx}"

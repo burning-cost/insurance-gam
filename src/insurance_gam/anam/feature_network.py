@@ -57,7 +57,7 @@ class ExUActivation(nn.Module):
         # exu per-feature: different from a standard linear layer
         # each feature i maps to out_features outputs
         # result shape: (batch, in_features, out_features) -> (batch, out_features)
-        out = torch.relu(shifted.unsqueeze(-1) * self.weights.unsqueeze(0))
+        out = torch.relu(shifted.unsqueeze(-1) * torch.exp(self.weights).unsqueeze(0))
         # sum over in_features to produce (batch, out_features)
         return out.sum(dim=1)
 

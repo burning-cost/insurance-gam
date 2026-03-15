@@ -55,15 +55,25 @@ class TestPoissonDeviance:
         assert out.item() > 0
 
     def test_exposure_weighting(self):
-        """Higher exposure -> higher loss for same deviation."""
+        """Weighted mean deviance: sum(w*D)/sum(w), not sum(w*D)/n.
+
+        For a single observation, sum(w*D)/sum(w) = D regardless of weight.
+        With two observations of different quality, the weighted average shifts
+        toward the worse-predicted observation when it has higher exposure.
+        """
         loss = PoissonDeviance()
-        mu = torch.tensor([2.0])
-        y = torch.tensor([1.0])
-        exp_low = torch.tensor([0.5])
-        exp_high = torch.tensor([5.0])
-        out_low = loss(mu, y, exp_low)
-        out_high = loss(mu, y, exp_high)
-        assert out_high.item() > out_low.item()
+        # Two observations: first well-predicted, second badly predicted.
+        # With high weight on the second (bad), weighted mean deviance is higher.
+        mu = torch.tensor([1.0, 3.0])   # first: perfect; second: off by 3x
+        y = torch.tensor([1.0, 1.0])
+        w_favour_good = torch.tensor([5.0, 1.0])   # upweight the well-predicted one
+        w_favour_bad = torch.tensor([1.0, 5.0])    # upweight the badly-predicted one
+        loss_low = loss(mu, y, w_favour_good)
+        loss_high = loss(mu, y, w_favour_bad)
+        assert loss_high.item() > loss_low.item(), (
+            f"Expected weighted-mean deviance higher when bad obs upweighted: "
+            f"{loss_high.item():.6f} vs {loss_low.item():.6f}"
+        )
 
     def test_gradient_flows(self):
         loss = PoissonDeviance()

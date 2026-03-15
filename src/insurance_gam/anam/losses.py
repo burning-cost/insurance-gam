@@ -181,7 +181,14 @@ def smoothness_penalty(
     This discourages shape functions that change direction rapidly.
     Lambda_smooth controls the trade-off between fit and smoothness.
     """
-    x_grid = torch.linspace(x_min, x_max, n_points)
+    # Determine device from network parameters so the grid lands on the same
+    # device as the model (GPU or CPU). torch.linspace defaults to CPU which
+    # would cause device-mismatch errors when the network is on CUDA.
+    try:
+        device = next(feature_network.parameters()).device
+    except StopIteration:
+        device = torch.device("cpu")
+    x_grid = torch.linspace(x_min, x_max, n_points, device=device)
     f_vals = feature_network(x_grid).squeeze(-1)  # (n_points,)
 
     # Second-order differences: f[k+2] - 2*f[k+1] + f[k]
@@ -202,10 +209,15 @@ def l1_sparsity_penalty(
     """
     penalty = torch.tensor(0.0)
     for net in feature_networks:
-        for name, param in net.named_parameters():
-            # Target the final linear layer weights
-            if "weight" in name:
-                penalty = penalty + param.abs().sum()
+        # Collect only the output layer: the last nn.Linear in the network.
+        # Penalising all weight layers would shrink intermediate representations
+        # too aggressively — the docstring is clear that only the output layer
+        # is the right target for feature-selection sparsity.
+        import torch.nn as nn
+        linear_layers = [m for m in net.modules() if isinstance(m, nn.Linear)]
+        if linear_layers:
+            output_layer = linear_layers[-1]
+            penalty = penalty + output_layer.weight.abs().sum()
     return lambda_l1 * penalty
 
 

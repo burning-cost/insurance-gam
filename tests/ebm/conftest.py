@@ -73,9 +73,11 @@ def _make_mock_interpret():
                 for _ in range(n_features)
             ]
 
-            # Bin weights: uniform-ish, missing bin last
+            # Bin weights: interpretML puts missing-value bin at index 0.
+            # Layout: [missing, b1, b2, b3, b4, b5]
+            # Modal bin is b3 (index 3, weight=30.0).
             self.term_bin_weights_ = [
-                np.array([10.0, 20.0, 25.0, 30.0, 20.0, 5.0])  # [b1..b5, missing]
+                np.array([5.0, 20.0, 25.0, 30.0, 20.0, 10.0])  # [missing, b1..b5]
                 for _ in range(n_features)
             ]
             return self

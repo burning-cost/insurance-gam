@@ -84,8 +84,9 @@ def _modal_bin_idx(ebm, feature: str) -> int:
     try:
         feature_idx = list(ebm.feature_names_in_).index(feature)
         weights = ebm.term_bin_weights_[feature_idx]
-        # weights includes the missing-value bin as the last element; exclude it
-        main_weights = weights[:-1] if len(weights) > 1 else weights
+        # weights has the missing-value bin at index 0 (interpretML convention);
+        # exclude it by taking weights[1:] — MonotonicityEditor uses the same pattern.
+        main_weights = weights[1:] if len(weights) > 1 else weights
         return int(np.argmax(main_weights))
     except (AttributeError, IndexError):
         return 0

@@ -21,7 +21,7 @@ class PoissonDeviance(nn.Module):
     """
     Weighted Poisson deviance.
 
-    L = (1/n) * sum_i 2 * v_i * (mu_i - Y_i - Y_i * log(mu_i / Y_i))
+    L = sum_i 2 * v_i * (mu_i - Y_i - Y_i * log(mu_i / Y_i)) / sum_i v_i
 
     where:
         mu_i = predicted frequency (must be positive)
@@ -60,14 +60,14 @@ class PoissonDeviance(nn.Module):
             torch.zeros_like(y),
         )
         bracket = mu - y + log_term
-        return 2.0 * (exposure * bracket).mean()
+        return 2.0 * (exposure * bracket).sum() / exposure.sum().clamp(min=_EPS)
 
 
 class GammaDeviance(nn.Module):
     """
     Weighted Gamma deviance.
 
-    L = (1/n) * sum_i 2 * v_i * (-log(Y_i / mu_i) + (Y_i - mu_i) / mu_i)
+    L = sum_i 2 * v_i * (-log(Y_i / mu_i) + (Y_i - mu_i) / mu_i) / sum_i v_i
 
     Used for severity (cost per claim). Y_i must be strictly positive.
     """
@@ -93,18 +93,18 @@ class GammaDeviance(nn.Module):
         mu = torch.clamp(mu, min=_EPS)
         y = torch.clamp(y, min=_EPS)
         bracket = -torch.log(y / mu) + (y - mu) / mu
-        return 2.0 * (exposure * bracket).mean()
+        return 2.0 * (exposure * bracket).sum() / exposure.sum().clamp(min=_EPS)
 
 
 class TweedieDeviance(nn.Module):
     """
     Weighted Tweedie deviance.
 
-    L = (1/n) * sum_i 2 * v_i * (
+    L = sum_i 2 * v_i * (
             Y_i^(2-p) / ((1-p)(2-p))
             - Y_i * mu_i^(1-p) / (1-p)
             + mu_i^(2-p) / (2-p)
-        )
+        ) / sum_i v_i
 
     The Tweedie family interpolates between Poisson (p=1) and Gamma (p=2) and
     is useful for pure premium modelling (frequency x severity in one step).
@@ -148,7 +148,7 @@ class TweedieDeviance(nn.Module):
         term3 = mu.pow(2 - p) / (2 - p)
 
         bracket = term1 - term2 + term3
-        return 2.0 * (exposure * bracket).mean()
+        return 2.0 * (exposure * bracket).sum() / exposure.sum().clamp(min=_EPS)
 
 
 def get_loss(name: str, **kwargs) -> nn.Module:

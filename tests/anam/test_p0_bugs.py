@@ -386,3 +386,82 @@ class TestP04GetParamsComplete:
         assert cloned.feature_configs is not None
         assert len(cloned.feature_configs) == 1
         assert cloned.feature_configs[0].name == "a"
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for the NEW P0/P1 bugs (second audit batch)
+# ---------------------------------------------------------------------------
+
+
+class TestP03ExUNegativeWeightsRegression:
+    """ExU activation must produce non-zero output when weights are negative.
+
+    The original bug: the forward pass used self.weights directly instead of
+    torch.exp(self.weights). For negative weights, relu(x * w) would collapse to
+    relu((negative) * (positive_input)) = 0 for all positive inputs.
+    With exp(w): even w=-10 gives exp(-10) > 0, so relu(x * exp(w)) can be nonzero.
+    """
+
+    def test_exu_output_nonzero_with_negative_weights(self):
+        """ExU must produce non-zero output when weights are initialised negative."""
+        import torch.nn as nn
+        net = FeatureNetwork(hidden_sizes=[16, 8], activation="exu")
+
+        # Force all ExU weights to be strongly negative
+        with torch.no_grad():
+            for module in net.network.modules():
+                if isinstance(module, ExUActivation):
+                    module.weights.fill_(-5.0)  # exp(-5) = 0.0067 > 0
+                    module.biases.fill_(0.0)
+
+        x = torch.linspace(0.1, 1.0, 20)
+        out = net(x)
+        # With self.weights directly: relu(x * (-5)) = 0 for all positive x
+        # With torch.exp(self.weights): relu(x * exp(-5)) can be nonzero -> nonzero output
+        # The output layer applies a Linear on top, so check at the ExU layer directly
+        exu_layer = [m for m in net.network.modules() if isinstance(m, ExUActivation)][0]
+        with torch.no_grad():
+            x_in = torch.linspace(0.1, 1.0, 20).unsqueeze(-1)  # (20, 1) -> in_features=1
+            exu_out = exu_layer(x_in)
+        # exp(-5.0) > 0, so shifted * exp(w) > 0 for x > bias(=0), relu keeps it
+        assert exu_out.abs().sum().item() > 0, (
+            "ExU output is all-zero with negative weights. "
+            "This indicates torch.exp(self.weights) is not being applied."
+        )
+
+    def test_exu_uses_exp_not_raw_weights(self):
+        """Verify the exp transformation: output must scale with exp(w) not w."""
+        # For ExU: out = relu(exp(w) * (x - b))
+        # If w=0: out = relu(1.0 * (x - b)) (exp(0)=1)
+        # If w=2: out = relu(exp(2) * (x - b)) ~= relu(7.4 * (x - b)) (much larger)
+        # If code uses w directly: out at w=2 would be relu(2 * (x - b)) (only 2x)
+        exu = ExUActivation(in_features=1, out_features=4)
+        with torch.no_grad():
+            exu.weights.fill_(0.0)
+            exu.biases.fill_(0.0)
+        x = torch.tensor([[1.0]])  # (1, 1)
+        out_w0 = exu(x).detach().clone()
+
+        with torch.no_grad():
+            exu.weights.fill_(2.0)
+        out_w2 = exu(x).detach().clone()
+
+        # exp(2) / exp(0) = e^2 ~= 7.389
+        # If using raw weights: ratio = 2 / 0 = undefined (w=0 gives relu(0)=0)
+        # So test with w=1 and w=3 instead:
+        with torch.no_grad():
+            exu.weights.fill_(1.0)
+        out_w1 = exu(x).detach()
+
+        with torch.no_grad():
+            exu.weights.fill_(3.0)
+        out_w3 = exu(x).detach()
+
+        if out_w1.abs().sum() > 1e-9:
+            ratio = (out_w3.abs().sum() / out_w1.abs().sum()).item()
+            # exp(3)/exp(1) = e^2 ~= 7.39
+            # raw weights: 3/1 = 3
+            assert ratio > 5.0, (
+                f"ExU output ratio for w=3 vs w=1 is {ratio:.2f}, expected ~7.4 (exp scaling). "
+                f"Got {ratio:.2f} which suggests raw weight multiplication, not exp."
+            )

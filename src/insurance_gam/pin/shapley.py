@@ -153,36 +153,48 @@ def exact_shapley_values(
                 # For this pair, we need 4 evaluations:
                 # h(x_j, x_k), h(b_j, x_k), h(x_j, b_k), h(b_j, b_k)
 
-                # Assemble the 4 required x_dict variants
-                def _make(use_j_from_bg: bool, use_k_from_bg: bool) -> Dict[str, torch.Tensor]:
-                    d = dict(x_dict)
-                    fname_j = feature_names[j]
-                    fname_k = feature_names[k]
-                    if use_j_from_bg:
-                        d[fname_j] = bg_single[fname_j]
-                    if use_k_from_bg:
-                        d[fname_k] = bg_single[fname_k]
-                    return d
-
                 w_idx = model.interaction_tokens._pair_to_idx[(j, k)]
                 w_jk = model.output_weights[w_idx].item()
 
-                h_xx = compute_pair_output(model, j, k, _make(False, False))
-                h_bx = compute_pair_output(model, j, k, _make(True, False))
-                h_xb = compute_pair_output(model, j, k, _make(False, True))
-                h_bb = compute_pair_output(model, j, k, _make(True, True))
+                fname_j = feature_names[j]
+                fname_k = feature_names[k]
 
-                # Contribution to feature j and k
-                # For j: average of (h_xx - h_bx) and (h_xb - h_bb)
-                delta_j = 0.5 * w_jk * ((h_xx - h_bx) + (h_xb - h_bb))
-                shap[:, j] += delta_j
+                if j == k:
+                    # Diagonal / main-effect pair.
+                    # When j==k, fname_j == fname_k. Building a dict with both
+                    # use_j_from_bg and use_k_from_bg would be a no-op (same key),
+                    # so we only need two evaluations: h(x, x) and h(b, b).
+                    d_xx = dict(x_dict)
+                    d_bb = dict(x_dict)
+                    d_bb[fname_j] = bg_single[fname_j]
+                    h_xx = compute_pair_output(model, j, k, d_xx)
+                    h_bb = compute_pair_output(model, j, k, d_bb)
+                    # Full Shapley attribution: w_jj * (h_xx - h_bb)
+                    # (no 0.5 factor — there is only one distinct feature here)
+                    delta_j = w_jk * (h_xx - h_bb)
+                    shap[:, j] += delta_j
+                else:
+                    # Off-diagonal interaction pair: need all 4 evaluations.
+                    def _make(use_j_from_bg: bool, use_k_from_bg: bool) -> Dict[str, torch.Tensor]:
+                        d = dict(x_dict)
+                        if use_j_from_bg:
+                            d[fname_j] = bg_single[fname_j]
+                        if use_k_from_bg:
+                            d[fname_k] = bg_single[fname_k]
+                        return d
 
-                if j != k:
+                    h_xx = compute_pair_output(model, j, k, _make(False, False))
+                    h_bx = compute_pair_output(model, j, k, _make(True, False))
+                    h_xb = compute_pair_output(model, j, k, _make(False, True))
+                    h_bb = compute_pair_output(model, j, k, _make(True, True))
+
+                    # For j: average of (h_xx - h_bx) and (h_xb - h_bb)
+                    delta_j = 0.5 * w_jk * ((h_xx - h_bx) + (h_xb - h_bb))
+                    shap[:, j] += delta_j
+
                     # For k: average of (h_xx - h_xb) and (h_bx - h_bb)
                     delta_k = 0.5 * w_jk * ((h_xx - h_xb) + (h_bx - h_bb))
                     shap[:, k] += delta_k
-                # When j==k (main effect), the feature only appears once in pair;
-                # delta_j already captures the full main effect contribution
 
     # Average over background
     shap = shap / n_bg
