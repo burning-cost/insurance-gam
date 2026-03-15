@@ -52,13 +52,13 @@ neural = ["torch>=2.0.0"]
 ebm = ["interpret>=0.7.0"]
 # Optional EBM extras
 excel = ["openpyxl>=3.0"]
-glm = ["statsmodels>=0.13"]
+glm = ["statsmodels>=0.14.5"]
 # Everything
 all = [
     "torch>=2.0.0",
     "interpret>=0.7.0",
     "openpyxl>=3.0",
-    "statsmodels>=0.13",
+    "statsmodels>=0.14.5",
 ]
 dev = [
     "pytest>=7.4.0",
