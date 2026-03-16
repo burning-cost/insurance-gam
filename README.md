@@ -235,7 +235,9 @@ This package consolidates three previously separate libraries:
 
 ## Performance
 
-Benchmarked against **Poisson GLM** (statsmodels, main effects only) and **CatBoost Poisson GBM** on synthetic UK motor data — 50,000 policies, known DGP, temporal train/test split. Full notebook: `notebooks/benchmark.py`.
+The benchmark script at `benchmarks/benchmark.py` compares InsuranceEBM against Poisson GLM (statsmodels) on synthetic UK motor data with non-linear effects: a U-shaped driver age hazard, exponential NCD discount, vehicle age threshold at year 8, and log-miles loading.
+
+**Benchmark run status (post-P0 fixes, March 2026):** The benchmark requires both `statsmodels` (for the GLM baseline) and `interpret` (for the EBM). Neither was available in the test environment at the time of refresh. The benchmark runs on Databricks where full dependencies are installed — see `notebooks/benchmark.py`.
 
 The EBM sits between the GLM and CatBoost on predictive metrics, with a profile that is fundamentally different: the shape functions are directly auditable, there are no post-hoc explanations required, and the output is a relativity table the actuary can examine and challenge factor by factor.
 
@@ -246,7 +248,7 @@ The EBM sits between the GLM and CatBoost on predictive metrics, with a profile 
 | Interpretability | full (coefficients) | full (shape functions) | requires post-hoc SHAP |
 | Auditability for FCA | straightforward | straightforward | requires explanation layer |
 
-The benchmark measures Poisson deviance, Gini, and double-lift chart on the held-out test set. The EBM typically closes 50–80% of the Gini gap between GLM and CatBoost while maintaining direct interpretability. The shape functions are smooth, monotone-constrainable, and require no SHAP or surrogate model to explain.
+The EBM typically closes 50–80% of the Gini gap between GLM and CatBoost while maintaining direct interpretability. The shape functions are smooth, monotone-constrainable, and require no SHAP or surrogate model to explain. These ranges are from Databricks runs — see the notebook for specific numbers with the current library version.
 
 **When to use:** When a GBM clearly beats the production GLM but post-hoc explanation (SHAP-relativities, surrogate models) is creating noise in pricing committee sign-offs. The EBM offers comparable or better predictive performance than a GLM with hand-crafted interactions, with a shape function per feature rather than a coefficient per dummy level.
 
