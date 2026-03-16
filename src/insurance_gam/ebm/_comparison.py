@@ -43,7 +43,7 @@ def _extract_glm_relativities(glm_model, feature: str) -> pl.DataFrame:
     except ImportError:
         raise ImportError(
             "statsmodels is required to extract relativities from a GLM object. "
-            "Install with: pip install insurance-ebm[glm] "
+            "Install with: pip install insurance-gam[glm] "
             "Or pass glm_relativities as a pre-computed DataFrame instead."
         )
 

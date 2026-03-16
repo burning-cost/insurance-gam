@@ -168,18 +168,23 @@ class InsuranceEBM:
         else:
             n_interactions = int(self.interactions)
 
-        # Map loss string to interpretML objective
-        objective_map = {
-            "poisson": "poisson_deviance",
-            "tweedie": "tweedie_deviance",
-            "gamma": "gamma_deviance",
-            "mse": "rmse",
-            "mae": "mae",
-            "huber": "huber",
-        }
-        objective = objective_map[self.loss]
+        # Map loss string to interpretML objective.
+        # For Tweedie, the variance power must be embedded in the objective
+        # string as "tweedie_deviance:variance_power=<p>". Without it,
+        # interpretML falls back to a default power and the deviance is wrong.
+        if self.loss == "tweedie":
+            objective = f"tweedie_deviance:variance_power={self.variance_power}"
+        else:
+            objective_map = {
+                "poisson": "poisson_deviance",
+                "gamma": "gamma_deviance",
+                "mse": "rmse",
+                "mae": "mae",
+                "huber": "huber",
+            }
+            objective = objective_map[self.loss]
 
-        # Tweedie variance power
+        # tweedie_power kept for reference; power is now embedded in objective string
         tweedie_power = self.variance_power if self.loss == "tweedie" else None
 
         # Build monotone constraints list aligned to feature order
@@ -198,8 +203,8 @@ class InsuranceEBM:
             "objective": objective,
             "monotone_constraints": mc if any(v != 0 for v in mc) else None,
         }
-        if tweedie_power is not None:
-            ebm_args["tweedie_exp_target"] = False  # y is not log-transformed
+        # tweedie_exp_target is not needed — power is embedded in the objective string above.
+        # No additional kwarg required for Tweedie.
 
         ebm_args.update(kwargs)
         return ExplainableBoostingRegressor(**ebm_args)
@@ -346,7 +351,11 @@ class InsuranceEBM:
         X : polars.DataFrame or pandas.DataFrame
             Feature matrix.
         y : array-like
-            Observed values.
+            Observed values. For Poisson frequency models, this must be raw
+            claim counts (not rates). When exposure is provided, the model
+            computes expected counts (mu = exp(log_score) * exposure) and
+            compares to y; passing claim rates instead of counts will give
+            incorrect deviance values.
         exposure : array-like, optional
             Exposure values used to scale predictions.
 

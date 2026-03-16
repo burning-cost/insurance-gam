@@ -218,14 +218,14 @@ class RelativitiesTable:
 
         Notes
         -----
-        Requires openpyxl. Install with: pip install insurance-ebm[excel]
+        Requires openpyxl. Install with: pip install insurance-gam[excel]
         """
         try:
             import openpyxl  # noqa: F401
         except ImportError:
             raise ImportError(
                 "openpyxl is required for Excel export. "
-                "Install with: pip install insurance-ebm[excel]"
+                "Install with: pip install insurance-gam[excel]"
             )
 
         path = Path(path)
