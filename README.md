@@ -4,6 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]()
 [![License](https://img.shields.io/badge/license-BSD--3-blue)]()
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
 
 
 Interpretable GAM toolkit for insurance pricing. Three modelling approaches, one package.
