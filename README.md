@@ -235,24 +235,30 @@ This package consolidates three previously separate libraries:
 
 ## Performance
 
-The benchmark script at `benchmarks/benchmark.py` compares InsuranceEBM against Poisson GLM (statsmodels) on synthetic UK motor data with non-linear effects: a U-shaped driver age hazard, exponential NCD discount, vehicle age threshold at year 8, and log-miles loading.
+Benchmarked on Databricks serverless, 2026-03-16. DGP: 6,000 synthetic UK motor policies with non-linear frequency effects: U-shaped driver age hazard, exponential NCD discount, threshold at vehicle_age=8, log-miles loading. Baseline: sklearn PoissonRegressor with linear + quadratic terms. Oracle: known true log-rate.
 
-**Benchmark run status (post-P0 fixes, March 2026):** The benchmark requires both `statsmodels` (for the GLM baseline) and `interpret` (for the EBM). Neither was available in the test environment at the time of refresh. The benchmark runs on Databricks where full dependencies are installed — see `notebooks/benchmark.py`.
+| Model | Poisson Deviance | Gini | Gap from oracle (deviance) |
+|-------|-----------------|------|---------------------------|
+| Oracle (true DGP) | 0.2516 | -0.453 | 0 |
+| Poisson GLM (linear+quad) | 0.2535 | -0.449 | 0.002 |
+| InsuranceEBM (interactions="3x") | 1.333 | -0.294 | 1.082 |
 
-The EBM sits between the GLM and CatBoost on predictive metrics, with a profile that is fundamentally different: the shape functions are directly auditable, there are no post-hoc explanations required, and the output is a relativity table the actuary can examine and challenge factor by factor.
+**Honest result:** On this benchmark, the Poisson GLM with a quadratic driver age term essentially matches the oracle deviance (gap of 0.002). The EBM performs significantly worse on deviance (-426% relative) but has better Gini ranking (+35% relative), meaning it ranks risks better even while its calibrated counts are off.
 
-| Metric | Poisson GLM | EBM (insurance-gam) | CatBoost GBM |
-|--------|-------------|---------------------|--------------|
-| Poisson deviance | highest | between GLM and GBM | lowest |
-| Gini coefficient | lowest | between GLM and GBM | highest |
-| Interpretability | full (coefficients) | full (shape functions) | requires post-hoc SHAP |
-| Auditability for FCA | straightforward | straightforward | requires explanation layer |
+**What this means:** The EBM's exposure handling via the `init_score` offset approach does not produce calibrated expected counts on this DGP. The shape functions likely capture the non-linear patterns correctly, but the absolute scale is wrong. The Gini improvement over GLM (34.6%) reflects better risk ordering.
 
-The EBM typically closes 50–80% of the Gini gap between GLM and CatBoost while maintaining direct interpretability. The shape functions are smooth, monotone-constrainable, and require no SHAP or surrogate model to explain. These ranges are from Databricks runs — see the notebook for specific numbers with the current library version.
+**Gini vs Deviance trade-off:** For frequency modelling where the Poisson deviance is the primary scoring metric (e.g., in GLM model selection), the standard GLM is competitive or superior on this DGP because the quadratic driver age term captures most of the non-linearity. The EBM advantage is in more complex non-linear settings with higher-order interactions, or where shape function explainability is required.
 
-**When to use:** When a GBM clearly beats the production GLM but post-hoc explanation (SHAP-relativities, surrogate models) is creating noise in pricing committee sign-offs. The EBM offers comparable or better predictive performance than a GLM with hand-crafted interactions, with a shape function per feature rather than a coefficient per dummy level.
+**When to use InsuranceEBM:**
+- When the rating factor structure has confirmed non-linear effects that polynomial GLM terms cannot represent (verified by failing P-spline or MARS tests)
+- When you need directly auditable shape functions rather than SHAP-derived relativities
+- When the risk ranking (Gini) matters more than calibrated counts (reinsurance pricing, underwriter scores)
 
-**When NOT to use:** When the portfolio has strong multiplicative interactions between rating factors that an additive model cannot capture. The EBM handles pairwise interactions via interaction terms, but the hierarchy is still additive and cannot represent three-way interactions without explicit specification.
+**When NOT to use:**
+- When the Poisson deviance is the primary production metric and a well-specified GLM is competitive
+- When exposure accuracy matters (price calibration, capital models) — the EBM's exposure integration needs further validation
+
+See `notebooks/benchmark_databricks.py` for the full runnable benchmark.
 
 
 ## Databricks Notebook
