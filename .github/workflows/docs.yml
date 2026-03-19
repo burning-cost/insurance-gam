@@ -3,47 +3,44 @@ name: Docs
 on:
   push:
     branches: [main]
-    paths:
-      - "src/**"
-      - "docs/**"
-      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-
-      - name: Install insurance-gam and pdoc
+          python-version: '3.12'
+      - name: Install pdoc and package
         run: |
-          pip install -e ".[all]" pdoc
+          pip install pdoc
+          pip install -e '.[all]'
+      - name: Generate docs
+        run: pdoc -o ./docs insurance_gam
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs
 
-      - name: Generate API docs
-        run: |
-          pdoc \
-            --output-directory docs/api \
-            --docformat google \
-            --footer-text "insurance-gam v$(python -c 'import insurance_gam; print(insurance_gam.__version__)')" \
-            --edit-url "insurance_gam=https://github.com/burning-cost/insurance-gam/blob/main/src/insurance_gam/" \
-            insurance_gam \
-            insurance_gam.ebm \
-            insurance_gam.anam \
-            insurance_gam.pin
-
-      - name: Commit updated docs
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/
-          git diff --cached --quiet || git commit -m "docs: regenerate API reference [skip ci]"
-          git pull --rebase
-          git push
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

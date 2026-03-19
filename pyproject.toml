@@ -70,11 +70,13 @@ dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.0.0",
     "databricks-sdk>=0.97.0",
+    "pdoc>=14.0.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/burning-cost/insurance-gam"
 Repository = "https://github.com/burning-cost/insurance-gam"
+Documentation = "https://burning-cost.github.io/insurance-gam/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/insurance_gam"]
@@ -82,4 +84,3 @@ packages = ["src/insurance_gam"]
 [tool.pytest.ini_options]
 testpaths = ["tests/ebm", "tests/anam", "tests/pin"]
 addopts = "-v --tb=short"
-
