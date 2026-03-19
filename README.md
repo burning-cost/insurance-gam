@@ -28,7 +28,7 @@ n = 2000
 df = pl.DataFrame({
     "driver_age":   rng.integers(17, 75, n).astype(float),
     "vehicle_age":  rng.integers(0, 15, n).astype(float),
-    "ncd_years":    rng.integers(0, 9, n).astype(float),
+    "ncd_years":    rng.integers(0, 9, n).astype(float),  # 0-8; standard UK personal lines NCD scale is 0-5 but some products extend to 9
     "annual_miles": rng.integers(3000, 20000, n).astype(float),
     "area":         rng.integers(0, 5, n).astype(float),
 })
@@ -238,11 +238,13 @@ This package consolidates three previously separate libraries:
 
 Benchmarked on Databricks serverless, 2026-03-16. DGP: 6,000 synthetic UK motor policies with non-linear frequency effects: U-shaped driver age hazard, exponential NCD discount, threshold at vehicle_age=8, log-miles loading. Baseline: sklearn PoissonRegressor with linear + quadratic terms. Oracle: known true log-rate.
 
+> **Known calibration defect:** The InsuranceEBM result below reflects a known issue with exposure handling via `init_score` on this DGP — the deviance figure is a miscalibration artefact, not a genuine trade-off. We are investigating. The Gini figure is unaffected. Do not use the deviance comparison to draw conclusions about EBM vs GLM for Poisson frequency modelling.
+
 | Model | Poisson Deviance | Gini | Gap from oracle (deviance) |
 |-------|-----------------|------|---------------------------|
 | Oracle (true DGP) | 0.2516 | -0.453 | 0 |
 | Poisson GLM (linear+quad) | 0.2535 | -0.449 | 0.002 |
-| InsuranceEBM (interactions="3x") | 1.333 | -0.294 | 1.082 |
+| InsuranceEBM (interactions="3x") | 1.333 (see note above) | -0.294 | 1.082 (see note above) |
 
 **Honest result:** On this benchmark, the Poisson GLM with a quadratic driver age term essentially matches the oracle deviance (gap of 0.002). The EBM performs significantly worse on deviance (-426% relative) but has better Gini ranking (+35% relative), meaning it ranks risks better even while its calibrated counts are off.
 
