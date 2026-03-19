@@ -21,6 +21,11 @@
             <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
                    pattern=".+" required>
 
+            <h2>Contents</h2>
+            <ul>
+  <li><a href="#missing-extras">Missing extras</a></li>
+</ul>
+
 
             <h2>Submodules</h2>
             <ul>
@@ -37,7 +42,7 @@
     </ul>
 
 
-            <footer>insurance-gam v0.1.0</footer>
+            <footer>insurance-gam v0.1.6</footer>
 
         <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev" target="_blank">
             built with <span class="visually-hidden">pdoc</span><img
@@ -66,6 +71,15 @@ Heavy dependencies (torch, interpret) are only loaded when the subpackage is imp
 
 <p>Do NOT import this top-level package expecting all subpackages to be available —
 use subpackage imports directly. The top-level package exposes only the version.</p>
+
+<h2 id="missing-extras">Missing extras</h2>
+
+<p>If you see an ImportError when importing a subpackage, install the relevant extra:</p>
+
+<pre><code>pip install insurance-gam[ebm]     # for <a href="insurance_gam/ebm.html">insurance_gam.ebm</a> (requires interpret)
+pip install insurance-gam[neural]  # for <a href="insurance_gam/anam.html">insurance_gam.anam</a> and <a href="insurance_gam/pin.html">insurance_gam.pin</a> (requires torch)
+pip install insurance-gam[all]     # everything
+</code></pre>
 </div>
 
                         <input id="mod-insurance_gam-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -86,10 +100,18 @@ use subpackage imports directly. The top-level package exposes only the version.
 </span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>
 </span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">Do NOT import this top-level package expecting all subpackages to be available —</span>
 </span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">use subpackage imports directly. The top-level package exposes only the version.</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.0&quot;</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ebm&quot;</span><span class="p">,</span> <span class="s2">&quot;anam&quot;</span><span class="p">,</span> <span class="s2">&quot;pin&quot;</span><span class="p">,</span> <span class="s2">&quot;__version__&quot;</span><span class="p">]</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">Missing extras</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="sd">--------------</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">If you see an ImportError when importing a subpackage, install the relevant extra:</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">    pip install insurance-gam[ebm]     # for insurance_gam.ebm (requires interpret)</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">    pip install insurance-gam[neural]  # for insurance_gam.anam and insurance_gam.pin (requires torch)</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">    pip install insurance-gam[all]     # everything</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.6&quot;</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ebm&quot;</span><span class="p">,</span> <span class="s2">&quot;anam&quot;</span><span class="p">,</span> <span class="s2">&quot;pin&quot;</span><span class="p">,</span> <span class="s2">&quot;__version__&quot;</span><span class="p">]</span>
 </span></pre></div>
 
 
@@ -97,7 +119,7 @@ use subpackage imports directly. The top-level package exposes only the version.
                 <section id="__version__">
                     <div class="attr variable">
             <span class="name">__version__</span>        =
-<span class="default_value">&#39;0.1.0&#39;</span>
+<span class="default_value">&#39;0.1.6&#39;</span>
 
         
     </div>
