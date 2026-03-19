@@ -23,12 +23,12 @@ try:
         residual_plot,
         calibration_table,
     )
-except ImportError as e:
+except ImportError as _e:
     raise ImportError(
-        "insurance_gam.ebm requires the ebm extra. "
-        "Install with: pip install insurance-gam[ebm]\n"
-        f"Original error: {e}"
-    ) from e
+        f"insurance_gam.ebm requires the 'interpret' package. "
+        f"Install it with: pip install insurance-gam[ebm]\n"
+        f"Original error: {_e}"
+    ) from _e
 
 __all__ = [
     "InsuranceEBM",

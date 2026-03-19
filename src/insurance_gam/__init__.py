@@ -12,7 +12,15 @@ Heavy dependencies (torch, interpret) are only loaded when the subpackage is imp
 
 Do NOT import this top-level package expecting all subpackages to be available —
 use subpackage imports directly. The top-level package exposes only the version.
+
+Missing extras
+--------------
+If you see an ImportError when importing a subpackage, install the relevant extra:
+
+    pip install insurance-gam[ebm]     # for insurance_gam.ebm (requires interpret)
+    pip install insurance-gam[neural]  # for insurance_gam.anam and insurance_gam.pin (requires torch)
+    pip install insurance-gam[all]     # everything
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.6"
 __all__ = ["ebm", "anam", "pin", "__version__"]

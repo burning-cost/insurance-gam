@@ -3,9 +3,9 @@ insurance_gam.anam — Actuarial Neural Additive Model subpackage.
 
 Re-exports the full public API of the original insurance-anam package.
 
-Requires the ``anam`` extra::
+Requires the ``neural`` extra::
 
-    pip install insurance-gam[anam]
+    pip install insurance-gam[neural]
 """
 
 try:
@@ -32,12 +32,12 @@ try:
         select_interactions_residual,
         shapes_to_relativity_table,
     )
-except ImportError as e:
+except ImportError as _e:
     raise ImportError(
-        "insurance_gam.anam requires the anam extra. "
-        "Install with: pip install insurance-gam[anam]\n"
-        f"Original error: {e}"
-    ) from e
+        f"insurance_gam.anam requires PyTorch. "
+        f"Install it with: pip install insurance-gam[neural]\n"
+        f"Original error: {_e}"
+    ) from _e
 
 __all__ = [
     "ANAM",
