@@ -11,11 +11,15 @@ Interpretable GAM toolkit for insurance pricing. Three modelling approaches, one
 
 GLMs have been the industry standard for decades. They're interpretable, well-understood, and regulators like them. But they leave predictive power on the table — particularly on non-linear effects and interactions. This package gives pricing actuaries three production-grade alternatives that sit between a GLM and a black-box gradient booster: all interpretable, all exposure-aware, all tested against realistic insurance data.
 
+**Blog post:** [Your Model Is Either Interpretable or Accurate. insurance-gam Refuses That Trade-Off.](https://burning-cost.github.io/2026/03/14/insurance-gam-interpretable-nonlinearity/)
+
 ## Quick Start
 
 ```bash
 pip install "insurance-gam[ebm]"
 ```
+
+> 💬 Questions or feedback? Start a [Discussion](https://github.com/burning-cost/insurance-gam/discussions). Found it useful? A ⭐ helps others find it.
 
 ```python
 import numpy as np
