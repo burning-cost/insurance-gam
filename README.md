@@ -292,3 +292,17 @@ A ready-to-run Databricks notebook benchmarking this library against standard ap
 | [insurance-distributional-glm](https://github.com/burning-cost/insurance-distributional-glm) | GAMLSS — extends GAMs to model dispersion and shape parameters as smooth functions of covariates |
 | [insurance-interactions](https://github.com/burning-cost/insurance-interactions) | GLM interaction detection — identify where the additive GAM structure needs interaction terms |
 
+
+---
+
+## Part of the Burning Cost Toolkit
+
+Open-source Python libraries for UK personal lines insurance pricing. [Browse all libraries](https://burning-cost.github.io/tools/)
+
+| Library | Description |
+|---------|-------------|
+| [insurance-fairness](https://github.com/burning-cost/insurance-fairness) | FCA proxy discrimination auditing — GAM shape functions make it easier to isolate which non-linear effects are proxying protected characteristics |
+| [insurance-monitoring](https://github.com/burning-cost/insurance-monitoring) | Model drift detection — tracks whether GAM shape functions remain well-calibrated as the portfolio evolves |
+| [insurance-causal](https://github.com/burning-cost/insurance-causal) | DML causal inference — establishes whether non-linear factor effects in the GAM are genuinely causal |
+| [insurance-conformal](https://github.com/burning-cost/insurance-conformal) | Distribution-free prediction intervals — uncertainty quantification around GAM pure premium predictions |
+| [insurance-governance](https://github.com/burning-cost/insurance-governance) | Model validation and MRM governance — sign-off pack for GAM models entering production pricing |
