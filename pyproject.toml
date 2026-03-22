@@ -7,7 +7,7 @@ name = "insurance-gam"
 version = "0.1.6"
 description = "Interpretable GAM toolkit for insurance pricing — EBM, Neural Additive Models, and Pairwise Interaction Networks"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.10"
 authors = [{ name = "Burning Cost", email = "pricing.frontier@gmail.com" }]
 keywords = [
