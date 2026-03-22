@@ -22,5 +22,10 @@ If you see an ImportError when importing a subpackage, install the relevant extr
     pip install insurance-gam[all]     # everything
 """
 
-__version__ = "0.1.6"
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("insurance-gam")
+except PackageNotFoundError:
+    __version__ = "0.0.0"  # not installed
 __all__ = ["ebm", "anam", "pin", "__version__"]
