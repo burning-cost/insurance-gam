@@ -337,10 +337,10 @@ class PINModel(nn.Module):
 
     def fit(
         self,
-        X_train,
+        X_train: Union[Dict[str, np.ndarray], "pl.DataFrame", "pd.DataFrame"],
         y_train: np.ndarray,
         exposure: Optional[np.ndarray] = None,
-        X_val=None,
+        X_val: Union[Dict[str, np.ndarray], "pl.DataFrame", "pd.DataFrame", None] = None,
         y_val: Optional[np.ndarray] = None,
         exposure_val: Optional[np.ndarray] = None,
         verbose: bool = True,
@@ -868,10 +868,10 @@ class PINEnsemble:
 
     def fit(
         self,
-        X_train,
+        X_train: Union[Dict[str, np.ndarray], "pl.DataFrame", "pd.DataFrame"],
         y_train: np.ndarray,
         exposure: Optional[np.ndarray] = None,
-        X_val=None,
+        X_val: Union[Dict[str, np.ndarray], "pl.DataFrame", "pd.DataFrame", None] = None,
         y_val: Optional[np.ndarray] = None,
         exposure_val: Optional[np.ndarray] = None,
         verbose: bool = False,

@@ -330,7 +330,11 @@ class ANAM:
         than the cached value discards the stale cache and recomputes.
         """
         self._check_fitted()
-        assert self._X_train_scaled is not None
+        if self._X_train_scaled is None:
+            raise RuntimeError(
+                "shape_functions() requires training data to be stored. "
+                "This should not happen after a successful fit() — please report this as a bug."
+            )
 
         # P0-1 fix: invalidate cache when n_points changes.
         if self._shapes_cache is None or self._shapes_cache_n_points != n_points:
