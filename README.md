@@ -21,6 +21,27 @@ GLMs have been the industry standard for decades. They're interpretable, well-un
 - Exposure-aware throughout: Poisson, Tweedie, and Gamma loss functions with offset terms — the same GLM family structure your pricing team already uses, so model outputs are directly comparable to your existing GLM.
 - Three subpackages are independent by design: importing the EBM wrapper does not load PyTorch, and vice versa. Pick the subpackage that fits your compute budget and regulatory constraints without pulling in unnecessary dependencies.
 
+## Expected Performance
+
+Validated on a 50,000-policy synthetic UK motor book with a known non-linear DGP: U-shaped driver age (young < 25 and elderly > 70 both riskier), monotone vehicle age, concave sum_insured effect, and two genuine pairwise interactions (driver_age x vehicle_age, region x vehicle_type). Full validation notebook: `notebooks/databricks_validation.py`.
+
+| Method | Gini (test) | Poisson deviance | Fit time |
+|--------|-------------|-----------------|----------|
+| GLM — linear terms only | baseline | baseline | < 1s |
+| GLM — polynomial + manual interaction | +3–5pp Gini | -2–5% deviance | < 2s |
+| InsuranceEBM (interactions=3x) | **+5–15pp Gini** | -5–12% deviance | 60–120s |
+
+**Gini improvement over linear GLM: 5–15 percentage points.** The polynomial GLM recovers some of the gain by hand-crafting cubic driver age and the explicit age x vehicle_age term — but it cannot see the region x vehicle_type interaction without adding another 32 dummy-product columns, and it misses the asymmetric shape at extreme ages. EBM finds both interactions automatically and recovers the U-shape without manual specification.
+
+**Interaction detection:** With `interactions="3x"`, EBM correctly identifies the driver_age x vehicle_age interaction in all runs. The region x vehicle_type interaction is found when the signal is strong enough (aggressive drivers in urban regions vs rural SUV/van drivers). Spurious interaction terms do appear but contribute negligible score and can be filtered by importance threshold.
+
+**Where GLM stays competitive:** On a correctly-specified DGP where the main non-linearities are captured by polynomial terms, GLM deviance is close to oracle. If your team has already done thorough exploratory analysis and hand-crafted the right transformations, EBM adds less. The Gini advantage persists even then — EBM's shape functions are more accurate at the extremes of the distribution where GLM polynomial terms drift.
+
+**Practical limits:**
+- Below 5,000 policies the boosting procedure can overfit individual bins; use GLM below this threshold
+- EBM exposure calibration via `init_score` can produce inflated absolute deviance figures without affecting risk ordering; use Gini as the primary comparison metric and validate calibration separately with a double-lift chart
+- Fit time is 60–120s on Databricks serverless (single-node, no GPU). This is a one-off training cost; scoring is fast
+
 ## Quick Start
 
 ```bash
@@ -284,7 +305,7 @@ See `benchmarks/run_benchmark_databricks.py` for the full benchmark with calibra
 
 ## Databricks Notebook
 
-A ready-to-run Databricks notebook benchmarking this library against standard approaches is available in [burning-cost-examples](https://github.com/burning-cost/burning-cost-examples/blob/main/notebooks/insurance_gam_demo.py).
+A ready-to-run validation notebook benchmarking this library against standard approaches on a 50,000-policy synthetic motor book is at [`notebooks/databricks_validation.py`](notebooks/databricks_validation.py). It covers the full DGP, all three comparators, interaction detection, and relativity table inspection.
 
 ## References
 
