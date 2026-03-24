@@ -342,3 +342,7 @@ Open-source Python libraries for UK personal lines insurance pricing. [Browse al
 | [insurance-causal](https://github.com/burning-cost/insurance-causal) | DML causal inference — establishes whether non-linear factor effects in the GAM are genuinely causal |
 | [insurance-conformal](https://github.com/burning-cost/insurance-conformal) | Distribution-free prediction intervals — uncertainty quantification around GAM pure premium predictions |
 | [insurance-governance](https://github.com/burning-cost/insurance-governance) | Model validation and MRM governance — sign-off pack for GAM models entering production pricing |
+
+## Training Course
+
+Want structured learning? [Insurance Pricing in Python](https://burning-cost.github.io/course) is a 12-module course covering the full pricing workflow. Module 5 covers GAMs and interpretable non-linear models — EBMs, shape functions, and pairwise interaction networks for insurance pricing. £97 one-time.
