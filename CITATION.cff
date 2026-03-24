@@ -1,0 +1,61 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "insurance-gam"
+abstract: >
+  Interpretable GAM toolkit for insurance pricing. Three production-grade
+  modelling approaches: Explainable Boosting Machine (EBM) with relativity table
+  extraction, Actuarial Neural Additive Model (ANAM) with monotonicity
+  constraints, and Pairwise Interaction Networks (PIN/GA2M) for interaction
+  detection. All produce per-feature shape functions auditable by a pricing
+  committee. Exposure-aware with Poisson, Tweedie, and Gamma losses.
+authors:
+  - name: "Burning Cost Contributors"
+url: "https://github.com/burning-cost/insurance-gam"
+repository-code: "https://github.com/burning-cost/insurance-gam"
+license: MIT
+version: "0.1.7"
+date-released: "2026-03-21"
+keywords:
+  - insurance
+  - GAM
+  - generalised additive model
+  - interpretable machine learning
+  - actuarial
+references:
+  - type: article
+    title: "An Interpretable Deep Learning Model for General Insurance Pricing"
+    authors:
+      - family-names: Laub
+        given-names: Patrick J.
+      - family-names: Pho
+        given-names: Erika
+      - family-names: Wong
+        given-names: Steven
+    year: 2025
+    url: "https://arxiv.org/abs/2509.08467"
+  - type: article
+    title: "Tree-like Pairwise Interaction Networks"
+    authors:
+      - family-names: Richman
+        given-names: Ronald
+      - family-names: Scognamiglio
+        given-names: Salvatore
+      - family-names: Wüthrich
+        given-names: Mario V.
+    year: 2025
+    url: "https://arxiv.org/abs/2508.15678"
+  - type: article
+    title: "Accurate intelligible models with pairwise interactions"
+    authors:
+      - family-names: Lou
+        given-names: Yin
+      - family-names: Caruana
+        given-names: Rich
+      - family-names: Gehrke
+        given-names: Johannes
+      - family-names: Hooker
+        given-names: Giles
+    booktitle: "Proceedings of the 19th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining"
+    year: 2013
+    doi: "10.1145/2487575.2487579"
