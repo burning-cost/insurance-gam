@@ -7,9 +7,7 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
 
 
-Interpretable GAM toolkit for insurance pricing. Three modelling approaches, one package.
-
-GLMs have been the industry standard for decades. They're interpretable, well-understood, and regulators like them. But they leave predictive power on the table — particularly on non-linear effects and interactions. This package gives pricing actuaries three production-grade alternatives that sit between a GLM and a black-box gradient booster: all interpretable, all exposure-aware, all tested against realistic insurance data.
+UK personal lines pricing still runs mostly on GLMs with manually engineered polynomial terms — which works until you encounter a U-shaped driver age curve, a convex NCD discount, or an interaction the analyst did not think to add. insurance-gam gives you three production-grade alternatives that sit between a GLM and a black-box gradient booster: all interpretable as per-feature shape functions a pricing actuary can read, all exposure-aware with Poisson/Tweedie/Gamma losses, all designed for the log-link multiplicative world of insurance ratemaking.
 
 **Blog post:** [Your Model Is Either Interpretable or Accurate. insurance-gam Refuses That Trade-Off.](https://burning-cost.github.io/2026/03/14/insurance-gam-interpretable-nonlinearity/)
 
@@ -306,6 +304,15 @@ See `benchmarks/run_benchmark_databricks.py` for the full benchmark with calibra
 ## Databricks Notebook
 
 A ready-to-run validation notebook benchmarking this library against standard approaches on a 50,000-policy synthetic motor book is at [`notebooks/databricks_validation.py`](notebooks/databricks_validation.py). It covers the full DGP, all three comparators, interaction detection, and relativity table inspection.
+
+## Limitations
+
+- `InsuranceEBM` has a known exposure calibration issue with the `init_score` offset approach on some DGPs. The Gini (risk ranking) is unaffected, but the absolute Poisson deviance can be inflated relative to a correctly calibrated GLM. Validate exposure handling on a held-out calibration set before using EBM pure premium predictions in price-to-burn applications. See the benchmark caveat in the Performance section.
+- `ANAM` and `PINModel` require PyTorch and are not suitable for environments where training time is critical. EBM fits on a single CPU in 60–120 seconds; the neural subpackages may take 10–30 minutes on complex datasets without GPU acceleration.
+- All three models produce additive decompositions. Genuinely multiplicative interactions — where the effect of driver age on loss depends strongly on vehicle group in a way that is not separable — are not fully captured. Use `PINModel` (pairwise interactions) or fall back to a GBM if validation shows systematic A/E failures in interaction cells.
+- Monotonicity constraints in `ANAM` use Dykstra projection. Enforcing monotonicity on a factor that genuinely has non-monotone structure (e.g., claiming driver_age is monotone increasing when the U-shape is real) will force the model to misfit. Only apply monotonicity constraints when the direction is actuarially justified.
+- The `RelativitiesTable` output from EBM is extracted from additive log-scale contributions, not multiplicative rating factors. The conversion is an approximation when EBM has learnt interaction terms. Cross-validate segment A/E ratios before implementing derived factors in a production tariff.
+
 
 ## References
 
