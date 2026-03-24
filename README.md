@@ -11,6 +11,10 @@ UK personal lines pricing still runs mostly on GLMs with manually engineered pol
 
 **Blog post:** [Your Model Is Either Interpretable or Accurate. insurance-gam Refuses That Trade-Off.](https://burning-cost.github.io/2026/03/14/insurance-gam-interpretable-nonlinearity/)
 
+## Part of the Burning Cost stack
+
+Takes smoothed exposure curves from [insurance-whittaker](https://github.com/burning-cost/insurance-whittaker) or raw rating factors directly. Feeds fitted tariff models into [insurance-conformal](https://github.com/burning-cost/insurance-conformal) (prediction intervals), [insurance-fairness](https://github.com/burning-cost/insurance-fairness) (proxy discrimination audit), and [insurance-monitoring](https://github.com/burning-cost/insurance-monitoring) (post-deployment drift tracking). → [See the full stack](https://burning-cost.github.io/stack/)
+
 ## Why use this?
 
 - GLMs leave predictive power on the table on non-linear effects and interactions, but GBMs are not auditable by a pricing committee. This library gives you three production-grade alternatives — EBM, Neural Additive Model, and Pairwise Interaction Networks — all of which produce per-feature shape functions a pricing actuary can inspect and challenge factor by factor.
