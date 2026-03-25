@@ -333,6 +333,14 @@ A ready-to-run validation notebook benchmarking this library against standard ap
 | [insurance-interactions](https://github.com/burning-cost/insurance-interactions) | GLM interaction detection — identify where the additive GAM structure needs interaction terms |
 
 
+
+## Community
+
+- **Questions?** Start a [Discussion](https://github.com/burning-cost/insurance-gam/discussions)
+- **Found a bug?** Open an [Issue](https://github.com/burning-cost/insurance-gam/issues)
+- **Blog & tutorials:** [burning-cost.github.io](https://burning-cost.github.io)
+
+If this library saves you time, a star on GitHub helps others find it.
 ---
 
 ## Part of the Burning Cost Toolkit
