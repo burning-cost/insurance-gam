@@ -5,6 +5,7 @@
 [![Tests](https://github.com/burning-cost/insurance-gam/actions/workflows/ci.yml/badge.svg)](https://github.com/burning-cost/insurance-gam/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
+[![nbviewer](https://img.shields.io/badge/render-nbviewer-orange)](https://nbviewer.org/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
 
 
 UK personal lines pricing still runs mostly on GLMs with manually engineered polynomial terms — which works until you encounter a U-shaped driver age curve, a convex NCD discount, or an interaction the analyst did not think to add. insurance-gam gives you three production-grade alternatives that sit between a GLM and a black-box gradient booster: all interpretable as per-feature shape functions a pricing actuary can read, all exposure-aware with Poisson/Tweedie/Gamma losses, all designed for the log-link multiplicative world of insurance ratemaking.
