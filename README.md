@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/)
 [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]()
+[![Tests](https://github.com/burning-cost/insurance-gam/actions/workflows/ci.yml/badge.svg)](https://github.com/burning-cost/insurance-gam/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
 
