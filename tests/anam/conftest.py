@@ -24,7 +24,8 @@ True data-generating process:
 
 import numpy as np
 import pytest
-import torch
+
+torch = pytest.importorskip("torch", reason="torch not installed; skip anam tests")
 
 from insurance_gam.anam.model import FeatureConfig, InteractionConfig
 
