@@ -33,7 +33,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-
+    "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Office/Business :: Financial",
 ]
 
@@ -79,11 +79,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://burning-cost.github.io/insurance-gam"
+Homepage = "https://burning-cost.github.io/"
 Repository = "https://github.com/burning-cost/insurance-gam"
 Changelog = "https://github.com/burning-cost/insurance-gam/releases"
 Documentation = "https://burning-cost.github.io/insurance-gam"
-Issues = "https://github.com/burning-cost/insurance-gam/issues"
+"Bug Tracker" = "https://github.com/burning-cost/insurance-gam/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/insurance_gam"]
@@ -91,3 +91,8 @@ packages = ["src/insurance_gam"]
 [tool.pytest.ini_options]
 testpaths = ["tests/ebm", "tests/anam", "tests/pin"]
 addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.0.0",
+]
