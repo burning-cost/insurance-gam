@@ -1,6 +1,6 @@
 # insurance-gam
 
-[![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Tests](https://github.com/burning-cost/insurance-gam/actions/workflows/tests.yml/badge.svg)](https://github.com/burning-cost/insurance-gam/actions/workflows/tests.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/burning-cost/insurance-gam/blob/main/LICENSE) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb) [![nbviewer](https://img.shields.io/badge/render-nbviewer-orange)](https://nbviewer.org/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
+[![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Downloads](https://img.shields.io/pypi/dm/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Tests](https://github.com/burning-cost/insurance-gam/actions/workflows/tests.yml/badge.svg)](https://github.com/burning-cost/insurance-gam/actions/workflows/tests.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/burning-cost/insurance-gam/blob/main/LICENSE) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb) [![nbviewer](https://img.shields.io/badge/render-nbviewer-orange)](https://nbviewer.org/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
 
 ---
 
@@ -35,6 +35,20 @@ All three use the same GLM-family loss structure (Poisson, Tweedie, Gamma) with 
 | Exposure offset | Yes | Partial | Yes | No | Yes |
 | Python-native | Yes | Yes | No | Yes | Yes |
 | PRA/FCA-auditable output | Yes | No | Yes | Partial | Yes |
+
+---
+
+## Installation
+
+```bash
+pip install "insurance-gam[ebm]"     # EBM only (most common)
+pip install "insurance-gam[neural]"  # ANAM and PIN (requires PyTorch)
+pip install "insurance-gam[all]"     # everything
+# or with uv:
+uv add "insurance-gam[ebm]"
+```
+
+The three subpackages are independent:  loads interpretML,  loads PyTorch. Importing one does not load the other.
 
 ---
 
@@ -145,20 +159,6 @@ model.fit(df, y, exposure=exposure)
 weights = model.interaction_weights()
 effects = model.main_effects(df)
 ```
-
----
-
-## Installation options
-
-```bash
-uv add insurance-gam           # base only (no subpackages loaded)
-uv add "insurance-gam[ebm]"    # EBM wrapper (requires interpretML)
-uv add "insurance-gam[neural]" # ANAM and PIN (requires PyTorch)
-uv add "insurance-gam[all]"    # everything
-```
-
----
-
 ## Validated performance
 
 On a 50,000-policy synthetic UK motor book with a known non-linear DGP (U-shaped driver age, convex NCD, hard vehicle age threshold, log-miles loading):
