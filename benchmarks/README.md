@@ -1,10 +1,12 @@
 # Benchmarks — insurance-gam
 
-**Headline:** InsuranceEBM improves Gini by ~15–30% over a Poisson GLM with linear and quadratic terms on a DGP with a U-shaped driver age effect, a hard vehicle age threshold at year 8, and a non-linear NCD discount — effects the GLM cannot recover without the analyst already knowing the shape.
+Two benchmarks are available. The DGP benchmark uses synthetic data with a known ground truth (oracle). The freMTPL2 benchmark uses real insurance data to confirm the method generalises beyond synthetic examples.
 
 ---
 
-## Comparison table
+## Benchmark 1: Synthetic DGP (UK motor, known non-linearities)
+
+**Headline:** InsuranceEBM improves Gini by ~15–30% over a Poisson GLM with linear and quadratic terms on a DGP with a U-shaped driver age effect, a hard vehicle age threshold at year 8, and a non-linear NCD discount — effects the GLM cannot recover without the analyst already knowing the shape.
 
 10,000 synthetic UK motor policies (7,500 train / 2,500 test). Poisson DGP with known non-linear effects. Oracle uses the true DGP log-rate.
 
@@ -26,9 +28,27 @@ The EBM takes roughly 20× longer to fit than the GLM. For a typical 10k-policy 
 
 ---
 
+## Benchmark 2: freMTPL2 — real insurance data
+
+**Disclaimer:** freMTPL2 is French motor third-party liability data (OpenML dataset 41214, Noll, Salzmann, Wüthrich 2018). It is used here for methodology validation only — to demonstrate that InsuranceEBM generalises to real insurance portfolios beyond the synthetic DGP. It is not UK market data and results do not translate directly to UK motor pricing.
+
+**What it tests:** whether EBM discovers non-linear effects on real data without hand-crafted feature engineering, versus a reasonably-specified GLM baseline (log-Density transformation, linear numeric features, one-hot categoricals).
+
+**Data:** 75,000 rows subsampled from 678,013 policies; all claim-bearing policies retained, zero-claim policies randomly sampled to reach target size.
+
+| Metric | Poisson GLM | InsuranceEBM |
+|---|---|---|
+| Poisson deviance | run `fremtpl2_ebm.py` to populate | run `fremtpl2_ebm.py` to populate |
+| Gini coefficient | — | — |
+| Fit time | ~5–15s | ~4–10 min (Databricks serverless) |
+
+The GLM requires the analyst to decide on transformations (log-Density is reasonable; treating BonusMalus and DrivAge as linear is a simplification the EBM does not need to make). The EBM discovers non-linear shapes from data including the known U-shaped driver age effect and the BonusMalus compression at the extremes.
+
+---
+
 ## How to run
 
-### Databricks notebook (recommended, includes calibration tables and plots)
+### DGP benchmark — Databricks (recommended)
 
 ```bash
 databricks workspace import \
@@ -38,11 +58,23 @@ databricks workspace import \
 
 Attach to serverless compute and run all cells. The notebook prints a full results JSON at the end, suitable for job output capture.
 
-### Local
+### DGP benchmark — local
 
 ```bash
 uv run python benchmarks/benchmark.py
 ```
+
+### freMTPL2 benchmark — Databricks only
+
+The freMTPL2 benchmark downloads ~30MB from OpenML and fits EBM on 75K rows. It is designed for Databricks serverless compute and will be slow on a laptop.
+
+```bash
+databricks workspace import \
+  benchmarks/fremtpl2_ebm.py \
+  /Workspace/insurance-gam/fremtpl2_benchmark
+```
+
+Then attach to serverless compute and run all cells.
 
 ### Dependencies
 
