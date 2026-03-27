@@ -48,7 +48,7 @@ pip install "insurance-gam[all]"     # everything
 uv add "insurance-gam[ebm]"
 ```
 
-The three subpackages are independent:  loads interpretML,  loads PyTorch. Importing one does not load the other.
+The three subpackages are independent: `insurance_gam.ebm` loads interpretML, `insurance_gam.anam` and `insurance_gam.pin` load PyTorch. Importing one does not load the other.
 
 ---
 

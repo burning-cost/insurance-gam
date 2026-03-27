@@ -249,8 +249,8 @@ def shapes_to_relativity_table(
     if not dfs:
         return pl.DataFrame(
             schema={
-                "feature": pl.Utf8,
-                "level": pl.Utf8,
+                "feature": pl.String,
+                "level": pl.String,
                 "f_x": pl.Float64,
                 "relativity": pl.Float64,
                 "log_relativity": pl.Float64,
@@ -323,8 +323,8 @@ def compare_shapes_to_glm(
     if not rows:
         return pl.DataFrame(
             schema={
-                "feature": pl.Utf8,
-                "level": pl.Utf8,
+                "feature": pl.String,
+                "level": pl.String,
                 "anam_f": pl.Float64,
                 "glm_log_rel": pl.Float64,
                 "deviation": pl.Float64,

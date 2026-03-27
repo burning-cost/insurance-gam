@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.9] - 2026-03-27
+
+### Fixed
+- Fixed test assertions in `test_helpful_import_errors.py` that checked for
+  `pip install insurance-gam[anam]` and `pip install insurance-gam[pin]` — the
+  actual error messages correctly say `pip install insurance-gam[neural]`. The
+  tests would have failed on every CI run. (First-run UX audit, March 2026.)
+- Replaced deprecated `pl.Utf8` with `pl.String` in `ebm/_diagnostics.py` and
+  `anam/utils.py`. `pl.Utf8` is a legacy alias that Polars may remove in a
+  future major version. Both files now use the canonical `pl.String` type.
+- Fixed README installation note where package names were accidentally stripped,
+  producing the text "The three subpackages are independent:  loads interpretML,
+   loads PyTorch." — restored to name the subpackages explicitly.
+
 ## [0.1.8] - 2026-03-23
 
 ### Fixed
@@ -40,4 +54,3 @@
 - Add Quick Start section to README
 - docs: add Databricks notebook link
 - fix: handle list and ndarray for feature_names_in_ in RelativitiesTable
-

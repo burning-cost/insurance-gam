@@ -64,7 +64,8 @@ def test_anam_missing_torch_gives_helpful_error():
     assert err is not None, "Expected ImportError when torch is missing"
     msg = str(err)
     assert "anam" in msg.lower()
-    assert "pip install insurance-gam[anam]" in msg
+    # The neural extra installs both anam and pin; the error message says [neural]
+    assert "pip install insurance-gam[neural]" in msg
 
 
 def test_pin_missing_torch_gives_helpful_error():
@@ -72,4 +73,5 @@ def test_pin_missing_torch_gives_helpful_error():
     assert err is not None, "Expected ImportError when torch is missing"
     msg = str(err)
     assert "pin" in msg.lower()
-    assert "pip install insurance-gam[pin]" in msg
+    # The neural extra installs both anam and pin; the error message says [neural]
+    assert "pip install insurance-gam[neural]" in msg

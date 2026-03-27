@@ -376,9 +376,9 @@ def residual_plot(
 
     # Bin the feature
     col = X_pl[feature]
-    if col.dtype in (pl.Utf8, pl.Categorical, pl.Boolean):
+    if col.dtype in (pl.String, pl.Categorical, pl.Boolean):
         # Categorical: group by value
-        vals = col.cast(pl.Utf8).to_numpy()
+        vals = col.cast(pl.String).to_numpy()
         unique_vals = np.unique(vals)
         bin_labels = unique_vals
         assignments = np.searchsorted(unique_vals, vals)
