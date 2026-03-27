@@ -306,6 +306,12 @@ Fit times on Databricks serverless (single-node, no GPU): GLM <1s, EBM 60-120s. 
 See `benchmarks/run_benchmark_databricks.py` for the full benchmark with calibration tables.
 
 
+## External Benchmark: EBM vs GLM on Synthetic Motor Data
+
+The EBM wrapper has been benchmarked against a well-specified Poisson GLM on a motor pricing DGP. The benchmark notebook ([`notebooks/benchmark_databricks.py`](notebooks/benchmark_databricks.py)) generates 6,000 synthetic policies with four non-linear effects — a U-shaped driver age hazard, an exponential NCD discount, a hard threshold at vehicle age 8, and a log-miles loading — then fits both `InsuranceEBM` and a GLM with linear and quadratic terms, comparing Poisson deviance and Gini coefficient on a held-out test set against an oracle model using the true DGP.
+
+The Databricks notebook was run on serverless compute as a reproducibility check for the results reported in the "Expected Performance" section above. The DGP is designed to be representative of UK motor non-linearities that polynomial GLM terms approximate but do not capture exactly.
+
 ## Databricks Notebook
 
 A ready-to-run validation notebook benchmarking this library against standard approaches on a 50,000-policy synthetic motor book is at [`notebooks/databricks_validation.py`](notebooks/databricks_validation.py). It covers the full DGP, all three comparators, interaction detection, and relativity table inspection.
