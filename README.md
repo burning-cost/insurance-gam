@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/)
 [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/)
 [![Tests](https://github.com/burning-cost/insurance-gam/actions/workflows/ci.yml/badge.svg)](https://github.com/burning-cost/insurance-gam/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/burning-cost/insurance-gam/blob/main/LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
 [![nbviewer](https://img.shields.io/badge/render-nbviewer-orange)](https://nbviewer.org/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
 
@@ -51,7 +51,7 @@ Validated on a 50,000-policy synthetic UK motor book with a known non-linear DGP
 uv add "insurance-gam[ebm]"
 ```
 
-> 💬 Questions or feedback? Start a [Discussion](https://github.com/burning-cost/insurance-gam/discussions). Found it useful? A ⭐ helps others find it.
+> Questions or feedback? Start a [Discussion](https://github.com/burning-cost/insurance-gam/discussions).
 
 ```python
 import numpy as np
@@ -341,7 +341,6 @@ A ready-to-run validation notebook benchmarking this library against standard ap
 - **Found a bug?** Open an [Issue](https://github.com/burning-cost/insurance-gam/issues)
 - **Blog & tutorials:** [burning-cost.github.io](https://burning-cost.github.io)
 
-If this library saves you time, a star on GitHub helps others find it.
 ---
 
 ## Part of the Burning Cost Toolkit
