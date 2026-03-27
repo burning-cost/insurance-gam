@@ -1,6 +1,8 @@
 # insurance-gam
 
-[![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Downloads](https://img.shields.io/pypi/dm/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Tests](https://github.com/burning-cost/insurance-gam/actions/workflows/tests.yml/badge.svg)](https://github.com/burning-cost/insurance-gam/actions/workflows/tests.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/burning-cost/insurance-gam/blob/main/LICENSE) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb) [![nbviewer](https://img.shields.io/badge/render-nbviewer-orange)](https://nbviewer.org/github/burning-cost/insurance-gam/blob/main/notebooks/quickstart.ipynb)
+**Non-linear tariff models that a pricing actuary can actually read.**
+
+[![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/) [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/burning-cost/insurance-gam/blob/main/LICENSE)
 
 ---
 
@@ -13,6 +15,46 @@ GBMs discover those interactions automatically, but the output — thousands of 
 GAMs bridge the gap: each feature gets a smooth non-linear shape function, the output is additive and inspectable factor by factor, and interactions can be represented as pairwise 2D shape functions rather than opaque tree splits.
 
 **Blog post:** [Your Model Is Either Interpretable or Accurate. insurance-gam Refuses That Trade-Off.](https://burning-cost.github.io/2026/03/14/insurance-gam-interpretable-nonlinearity/)
+
+---
+
+## Quickstart
+
+```bash
+uv add "insurance-gam[ebm]"
+```
+
+```python
+import polars as pl
+from insurance_gam.ebm import InsuranceEBM, RelativitiesTable
+
+model = InsuranceEBM(loss="poisson", interactions="3x")
+model.fit(X_train, y_train, exposure=exposure_train)
+
+rt = RelativitiesTable(model)
+print(rt.table("driver_age"))   # shape_value, relativity — readable by a pricing actuary
+print(rt.summary())
+```
+
+Each feature gets a curve. No post-hoc SHAP required — the shape functions are the model.
+
+---
+
+## Validated performance
+
+On a 50,000-policy synthetic UK motor book with a known non-linear DGP (U-shaped driver age, convex NCD, hard vehicle age threshold, log-miles loading):
+
+| Method | Gini vs linear GLM | Poisson deviance |
+|---|---|---|
+| GLM — linear terms only | baseline | baseline |
+| GLM — polynomial + manual interaction | +3–5pp | -2–5% |
+| `InsuranceEBM` (interactions=3x) | **+5–15pp** | **-5–12%** |
+
+EBM finds the U-shaped driver age curve and the convex NCD discount without any feature engineering. On a 10,000-policy benchmark, EBM ranks risks ~28% better than a competent GLM by Gini coefficient.
+
+Known caveat: EBM exposure handling via `init_score` can produce inflated absolute deviance figures on some DGPs without affecting risk ordering. Use Gini as the primary comparison metric and validate calibration separately.
+
+Full benchmark: `benchmarks/run_benchmark_databricks.py`.
 
 ---
 
@@ -38,60 +80,6 @@ All three use the same GLM-family loss structure (Poisson, Tweedie, Gamma) with 
 
 ---
 
-## Installation
-
-```bash
-pip install "insurance-gam[ebm]"     # EBM only (most common)
-pip install "insurance-gam[neural]"  # ANAM and PIN (requires PyTorch)
-pip install "insurance-gam[all]"     # everything
-# or with uv:
-uv add "insurance-gam[ebm]"
-```
-
-The three subpackages are independent: `insurance_gam.ebm` loads interpretML, `insurance_gam.anam` and `insurance_gam.pin` load PyTorch. Importing one does not load the other.
-
----
-
-## Quickstart
-
-```bash
-uv add "insurance-gam[ebm]"
-```
-
-```python
-import numpy as np
-import polars as pl
-from insurance_gam.ebm import InsuranceEBM, RelativitiesTable
-
-rng = np.random.default_rng(42)
-n = 2000
-
-df = pl.DataFrame({
-    "driver_age":   rng.integers(17, 75, n).astype(float),
-    "vehicle_age":  rng.integers(0, 15, n).astype(float),
-    "ncd_years":    rng.integers(0, 9, n).astype(float),
-    "annual_miles": rng.integers(3000, 20000, n).astype(float),
-    "area":         rng.integers(0, 5, n).astype(float),
-})
-exposure = rng.uniform(0.3, 1.0, n)
-log_rate = (
-    -2.5
-    + 0.5 * (df["driver_age"].to_numpy() < 25).astype(float)
-    - 0.12 * df["ncd_years"].to_numpy()
-    + 0.3 * (df["vehicle_age"].to_numpy() > 10).astype(float)
-)
-y = rng.poisson(np.exp(log_rate) * exposure)
-
-model = InsuranceEBM(loss="poisson", interactions="3x")
-model.fit(df[:1600], y[:1600], exposure=exposure[:1600])
-
-rt = RelativitiesTable(model)
-print(rt.table("ncd_years"))   # shape_value, relativity — a pricing actuary can read this
-print(rt.summary())
-```
-
----
-
 ## What's inside
 
 Three subpackages. Import only the one you need.
@@ -100,21 +88,10 @@ Three subpackages. Import only the one you need.
 
 Wraps [interpretML's](https://github.com/interpretml/interpret) `ExplainableBoostingRegressor` with insurance tooling: exposure-aware fit/predict via Poisson/Gamma/Tweedie losses, relativity table extraction, post-fit monotonicity enforcement, and GLM comparison tools.
 
-The `RelativitiesTable` output is directly readable as a rating factor table: NCD years, driver age, vehicle age, each with an auditable curve you can inspect and challenge factor by factor. No post-hoc SHAP required — the shape functions are the model.
+The `RelativitiesTable` output is directly readable as a rating factor table — NCD years, driver age, vehicle age, each with an auditable curve you can inspect and challenge factor by factor.
 
 ```bash
 uv add "insurance-gam[ebm]"
-```
-
-```python
-from insurance_gam.ebm import InsuranceEBM, RelativitiesTable
-
-model = InsuranceEBM(loss="poisson", interactions="3x")
-model.fit(X_train, y_train, exposure=exp_train)
-
-rt = RelativitiesTable(model)
-print(rt.table("driver_age"))
-print(rt.summary())
 ```
 
 ### `insurance_gam.anam` — Actuarial Neural Additive Model
@@ -128,11 +105,7 @@ uv add "insurance-gam[neural]"
 ```python
 from insurance_gam.anam import ANAM
 
-model = ANAM(
-    loss="poisson",
-    monotone_increasing=["vehicle_age"],
-    n_epochs=100,
-)
+model = ANAM(loss="poisson", monotone_increasing=["vehicle_age"], n_epochs=100)
 model.fit(df, y, sample_weight=exposure)
 shapes = model.shape_functions()
 shapes["vehicle_age"].plot()
@@ -159,21 +132,17 @@ model.fit(df, y, exposure=exposure)
 weights = model.interaction_weights()
 effects = model.main_effects(df)
 ```
-## Validated performance
 
-On a 50,000-policy synthetic UK motor book with a known non-linear DGP (U-shaped driver age, convex NCD, hard vehicle age threshold, log-miles loading):
+---
 
-| Method | Gini vs linear GLM | Poisson deviance |
-|---|---|---|
-| GLM — linear terms only | baseline | baseline |
-| GLM — polynomial + manual interaction | +3–5pp | -2–5% |
-| `InsuranceEBM` (interactions=3x) | **+5–15pp** | -5–12% |
+## Installation options
 
-EBM finds the U-shaped driver age curve and the convex NCD discount without any feature engineering. On a 10,000-policy benchmark, EBM ranks risks ~28% better than a competent GLM by Gini coefficient.
-
-Known caveat: EBM exposure handling via `init_score` can produce inflated absolute deviance figures on some DGPs without affecting risk ordering. Use Gini as the primary comparison metric and validate calibration separately. See the benchmark notebook for details.
-
-Full benchmark: `benchmarks/run_benchmark_databricks.py`. Full validation: `notebooks/databricks_validation.py`.
+```bash
+uv add insurance-gam           # base only (no subpackages loaded)
+uv add "insurance-gam[ebm]"    # EBM wrapper (requires interpretML)
+uv add "insurance-gam[neural]" # ANAM and PIN (requires PyTorch)
+uv add "insurance-gam[all]"    # everything
+```
 
 ---
 
