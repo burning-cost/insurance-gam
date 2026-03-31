@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.2.0] - 2026-03-31
+
+### Added
+- `EBMInsuranceWrapper` — unified actuarial facade for `InsuranceEBM`. Consolidates
+  the full actuarial workflow (fitting, prediction, diagnostics, relativities) into
+  a single object and adds four capabilities not previously available:
+
+  1. **Balance check and correction** — `balance_check()` returns global A/E ratio
+     (sum actual / sum predicted). `apply_balance_correction()` shifts the EBM
+     intercept by log(A/E) to enforce exact global balance, preserving all shape
+     functions. Module-level `balance_ratio()` function also exported for standalone use.
+
+  2. **Interaction heatmap** — `interaction_heatmap()` extracts 2-D shape functions
+     for EBM pairwise interaction terms and returns them as a long-format polars
+     DataFrame (bin_i, bin_j, score, relativity). `interaction_heatmap_wide()` pivots
+     this to a wide table for Excel export or notebook display.
+
+  3. **EU AI Act Article 13 transparency report** — `transparency_report()` generates
+     a JSON-serialisable dict with model metadata, performance metrics (deviance, Gini,
+     balance ratio), feature profiles (relativity ranges), interaction terms, and a
+     structured Article 13 checklist marking what is provided vs what requires human
+     input. `transparency_report_json()` returns the same as a formatted JSON string.
+
+  4. **Exposure-weighted k-fold cross-validation** — `cross_validate()` method on the
+     wrapper (and module-level `cross_validate()` function) runs k-fold CV on any
+     `InsuranceEBM` configuration, returning per-fold deviances plus mean and std.
+     Each fold trains a fresh model — no warm-starting.
+
+- Convenience methods on `EBMInsuranceWrapper`: `ae_by_decile()`, `gini_coefficient()`,
+  `segment_ae_table()`, `relativity_table()`, `relativity_summary()` — thin delegators
+  to the existing diagnostics modules, so you do not need to import them separately.
+
+- New exports from `insurance_gam.ebm`: `EBMInsuranceWrapper`, `balance_ratio`,
+  `cross_validate`.
+
+- 59 new tests in `tests/ebm/test_wrapper.py`.
+
 ## [0.1.9] - 2026-03-27
 
 ### Fixed

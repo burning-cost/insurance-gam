@@ -1,7 +1,10 @@
 """
 insurance_gam.ebm — EBM subpackage.
 
-Re-exports the full public API of the original insurance-ebm package.
+Re-exports the full public API of the original insurance-ebm package,
+plus EBMInsuranceWrapper (added v0.2.0) — a unified actuarial facade that
+adds balance checks, interaction heatmaps, EU AI Act transparency reports,
+and exposure-weighted cross-validation.
 
 Requires the ``ebm`` extra::
 
@@ -13,6 +16,7 @@ try:
     from ._relativities import RelativitiesTable
     from ._monotonicity import MonotonicityEditor
     from ._comparison import GLMComparison
+    from ._wrapper import EBMInsuranceWrapper, balance_ratio, cross_validate
     from . import _diagnostics as diagnostics
 
     from ._diagnostics import (
@@ -32,9 +36,12 @@ except ImportError as _e:
 
 __all__ = [
     "InsuranceEBM",
+    "EBMInsuranceWrapper",
     "RelativitiesTable",
     "MonotonicityEditor",
     "GLMComparison",
+    "balance_ratio",
+    "cross_validate",
     "diagnostics",
     "gini",
     "lorenz_curve",
