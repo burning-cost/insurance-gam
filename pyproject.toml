@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "insurance-gam"
-version = "0.3.0"
-description = "Interpretable GAM toolkit for insurance pricing — EBM, Neural Additive Models, Pairwise Interaction Networks, and Post-selection GLM Inference"
+version = "0.4.0"
+description = "Interpretable GAM toolkit for insurance pricing — EBM, Neural Additive Models, Pairwise Interaction Networks, Post-selection GLM Inference, and Debiased GLM CIs"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -24,6 +24,8 @@ keywords = [
     "tweedie",
     "post-selection-inference",
     "lasso",
+    "debiased-lasso",
+    "confidence-intervals",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -63,7 +65,7 @@ ebm = [
 ]
 # Optional EBM extras
 excel = ["openpyxl>=3.0"]
-# Post-selection inference: PostSelectionGLM, DataSplitPostSelectionGLM
+# Post-selection and debiased GLM inference
 glm = ["statsmodels>=0.14.5"]
 # Everything
 all = [

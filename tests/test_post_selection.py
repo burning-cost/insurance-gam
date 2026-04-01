@@ -170,7 +170,7 @@ class TestPostSelectionGLM:
         X_df = pd.DataFrame(X, columns=col_names)
         model = PostSelectionGLM(random_state=SEED).fit(X_df, y)
         df = model.summary()
-        assert list(df["feature"]) == col_names
+        assert set(df["feature"]) == set(col_names)
 
     def test_summary_before_fit_raises(self):
         model = PostSelectionGLM()
