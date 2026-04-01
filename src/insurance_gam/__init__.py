@@ -1,7 +1,7 @@
 """
 insurance-gam — interpretable GAM toolkit for insurance pricing.
 
-Five subpackages, one install:
+Six subpackages, one install:
 
     from insurance_gam.ebm import InsuranceEBM        # interpretML EBM wrapper
     from insurance_gam.anam import ANAM               # Actuarial Neural Additive Model
@@ -10,7 +10,10 @@ Five subpackages, one install:
         PostSelectionGLM,
         DataSplitPostSelectionGLM,
     )
-    from insurance_gam.debiased_glm import DebiasedGLM  # Debiased GLM CIs (marginal)
+    from insurance_gam.debiased_glm import DebiasedGLM          # Debiased GLM CIs (marginal)
+    from insurance_gam.penalized_glm_inference import (          # Fit-once, explore-both interface
+        PenalizedGLMInference,
+    )
 
 Each subpackage is independent. Import only the one you need.
 Heavy dependencies (torch, interpret) are only loaded when the subpackage is imported.
@@ -24,7 +27,8 @@ If you see an ImportError when importing a subpackage, install the relevant extr
 
     pip install insurance-gam[ebm]     # for insurance_gam.ebm (requires interpret)
     pip install insurance-gam[neural]  # for insurance_gam.anam and insurance_gam.pin (requires torch)
-    pip install insurance-gam[glm]     # for insurance_gam.post_selection and insurance_gam.debiased_glm (requires statsmodels)
+    pip install insurance-gam[glm]     # for insurance_gam.post_selection, insurance_gam.debiased_glm,
+                                       #   and insurance_gam.penalized_glm_inference (requires statsmodels)
     pip install insurance-gam[all]     # everything
 """
 
@@ -34,4 +38,12 @@ try:
     __version__ = version("insurance-gam")
 except PackageNotFoundError:
     __version__ = "0.0.0"  # not installed
-__all__ = ["ebm", "anam", "pin", "post_selection", "debiased_glm", "__version__"]
+__all__ = [
+    "ebm",
+    "anam",
+    "pin",
+    "post_selection",
+    "debiased_glm",
+    "penalized_glm_inference",
+    "__version__",
+]

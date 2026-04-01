@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "insurance-gam"
-version = "0.4.0"
-description = "Interpretable GAM toolkit for insurance pricing — EBM, Neural Additive Models, Pairwise Interaction Networks, Post-selection GLM Inference, and Debiased GLM CIs"
+version = "0.5.0"
+description = "Interpretable GAM toolkit for insurance pricing — EBM, Neural Additive Models, Pairwise Interaction Networks, Post-selection GLM Inference, Debiased GLM CIs, and PenalizedGLMInference"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
