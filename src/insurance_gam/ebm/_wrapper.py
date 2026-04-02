@@ -216,7 +216,7 @@ def _extract_interaction_shape(ebm, feature_i: str, feature_j: str) -> tuple[
 # ---------------------------------------------------------------------------
 
 def cross_validate(
-    model_kwargs: dict,
+    model_kwargs: dict[str, Any],
     X: Union[pl.DataFrame, "pd.DataFrame"],
     y: Union[np.ndarray, list, pl.Series, "pd.Series"],
     exposure: Optional[Union[np.ndarray, list, pl.Series, "pd.Series"]] = None,
@@ -426,7 +426,17 @@ class EBMInsuranceWrapper:
 
         Returns
         -------
-        self
+        EBMInsuranceWrapper
+            self, for method chaining.
+
+        Raises
+        ------
+        ImportError
+            If the ``interpret`` package is not installed
+            (``pip install insurance-gam[ebm]``).
+        ValueError
+            If X and y have incompatible shapes, or if exposure has a different
+            length from X.
         """
         self.model_ = self._build_model()
         self.model_.fit(X, y, exposure=exposure, sample_weight=sample_weight)
@@ -454,11 +464,17 @@ class EBMInsuranceWrapper:
         X : polars.DataFrame or pandas.DataFrame
             Feature matrix.
         exposure : array-like, optional
-            Exposure for scaling predictions.
+            Exposure for scaling predictions. Incorporated as log-offset.
 
         Returns
         -------
         numpy.ndarray
+            Predicted values, shape (n,). On the response scale (after exp()).
+
+        Raises
+        ------
+        RuntimeError
+            If called before :meth:`fit`.
         """
         self._check_fitted()
         return self.model_.predict(X, exposure=exposure)
@@ -470,13 +486,24 @@ class EBMInsuranceWrapper:
         """
         Return raw log-scale scores (before exp()).
 
+        Useful for inspecting the additive log contributions of features
+        before the exponential link function is applied.
+
         Parameters
         ----------
         X : polars.DataFrame or pandas.DataFrame
+            Feature matrix.
 
         Returns
         -------
         numpy.ndarray
+            Log-scale scores, shape (n,). Equivalent to
+            ``np.log(self.predict(X))``.
+
+        Raises
+        ------
+        RuntimeError
+            If called before :meth:`fit`.
         """
         self._check_fitted()
         return self.model_.predict_log_score(X)
@@ -490,15 +517,28 @@ class EBMInsuranceWrapper:
         """
         Mean deviance on test data (negated, higher = better).
 
+        Follows the sklearn convention of returning a score where higher is
+        better, so this returns -mean_deviance. Pass to :func:`cross_validate`
+        or use directly for hold-out evaluation.
+
         Parameters
         ----------
         X : polars.DataFrame or pandas.DataFrame
+            Feature matrix.
         y : array-like
+            Observed outcomes.
         exposure : array-like, optional
+            Exposure weights.
 
         Returns
         -------
         float
+            Negative mean deviance. A value of -0.12 means mean deviance = 0.12.
+
+        Raises
+        ------
+        RuntimeError
+            If called before :meth:`fit`.
         """
         self._check_fitted()
         return self.model_.score(X, y, exposure=exposure)

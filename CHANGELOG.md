@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0] - 2026-04-02
+
+### Fixed
+- `EBMInsuranceWrapper` docstrings: added `Raises` sections to `fit()`,
+  `predict()`, `score()`, and `predict_log_score()`. Added descriptive
+  `Returns` prose to `predict()` and `score()` so users know the shape
+  and sign convention without reading the source.
+- `cross_validate()` parameter `model_kwargs` type annotation tightened
+  from `dict` to `dict[str, Any]` for clarity.
+- `predict_log_score()` docstring now explains the relationship to
+  `predict()` and when to use each.
+
+
 ## [0.2.0] - 2026-03-31
 
 ### Added
