@@ -190,9 +190,26 @@ Takes smoothed exposure curves from [insurance-whittaker](https://github.com/bur
 
 ## References
 
-- Laub, Pho, Wong (2025). "An Interpretable Deep Learning Model for General Insurance Pricing." arXiv:2509.08467.
-- Richman, Scognamiglio, Wüthrich (2025). "Tree-like Pairwise Interaction Networks." arXiv:2508.15678.
-- Lou, Caruana, Gehrke, Hooker (2013). "Accurate intelligible models with pairwise interactions." KDD.
+**GAM foundations**
+
+- Hastie, T.J. & Tibshirani, R.J. (1990). *Generalized Additive Models*. Chapman & Hall. (Foundational text establishing the backfitting algorithm and GAM theory.)
+- Wood, S.N. (2017). *Generalized Additive Models: An Introduction with R* (2nd ed.). CRC Press. (Standard reference for mgcv-style penalised regression splines.)
+
+**Explainable Boosting Machines and GA2M**
+
+- Lou, Y., Caruana, R. & Gehrke, J. (2012). "Intelligible models for classification and regression." *KDD 2012*, 150–158. [doi:10.1145/2339530.2339556](https://doi.org/10.1145/2339530.2339556) (Original GA2M paper — pairwise interaction terms in interpretable additive models.)
+- Lou, Y., Caruana, R., Gehrke, J. & Hooker, G. (2013). "Accurate intelligible models with pairwise interactions." *KDD 2013*, 623–631. [doi:10.1145/2487575.2487579](https://doi.org/10.1145/2487575.2487579)
+- Nori, H., Jenkins, S., Koch, P. & Caruana, R. (2019). "InterpretML: A Unified Framework for Machine Learning Interpretability." [arXiv:1909.09223](https://arxiv.org/abs/1909.09223) (EBM implementation — the software basis for the EBM tariff workflow.)
+
+**Neural Additive Models**
+
+- Agarwal, R., Melnick, L., Frosst, N., Zhang, X., Lengerich, B., Caruana, R. & Hinton, G. (2021). "Neural Additive Models: Interpretable Machine Learning with Neural Nets." *NeurIPS 2021*. [arXiv:2004.13912](https://arxiv.org/abs/2004.13912)
+
+**Insurance-specific interpretable modelling**
+
+- Laub, P.J., Pho, K.H. & Wong, T.T. (2025). "An Interpretable Deep Learning Model for General Insurance Pricing." [arXiv:2509.08467](https://arxiv.org/abs/2509.08467)
+- Richman, R., Scognamiglio, S. & Wüthrich, M.V. (2025). "Tree-like Pairwise Interaction Networks." [arXiv:2508.15678](https://arxiv.org/abs/2508.15678)
+- Denuit, M., Henckaerts, R., Trufin, J. & Verdebout, T. (2021). "Autocalibration and Tweedie-dominance for Insurance Pricing with Machine Learning." *Insurance: Mathematics and Economics*, 101, 485–497. [doi:10.1016/j.insmatheco.2021.09.001](https://doi.org/10.1016/j.insmatheco.2021.09.001)
 
 ---
 
