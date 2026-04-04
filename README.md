@@ -2,7 +2,7 @@
 
 **Non-linear tariff models that a pricing actuary can actually read.**
 
-[![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/) [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/burning-cost/insurance-gam/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Downloads](https://img.shields.io/pypi/dm/insurance-gam)](https://pypi.org/project/insurance-gam/) [![Python](https://img.shields.io/pypi/pyversions/insurance-gam)](https://pypi.org/project/insurance-gam/) [![License](https://img.shields.io/pypi/l/insurance-gam)](https://pypi.org/project/insurance-gam/)
 
 ---
 
@@ -223,3 +223,11 @@ Takes smoothed exposure curves from [insurance-whittaker](https://github.com/bur
 ## Licence
 
 MIT
+
+## Related Libraries
+
+| Library | Description |
+|---------|-------------|
+| [`insurance-whittaker`](https://github.com/burning-cost/insurance-whittaker) | Whittaker-Henderson smoothing — applies the same philosophy of constrained smoothness to 1D rating curves |
+| [`shap-relativities`](https://github.com/burning-cost/shap-relativities) | SHAP relativities from GBMs — compare EBM shape functions against SHAP partial dependence |
+| [`insurance-glm-tools`](https://github.com/burning-cost/insurance-glm-tools) | GLM embeddings and factor clustering — combine with GAM outputs to build hybrid GLM-GAM tariffs |
