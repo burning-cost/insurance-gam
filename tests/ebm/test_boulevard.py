@@ -480,3 +480,188 @@ class TestFeatureIndex:
         model, df, y = fitted_additive_model
         edges, scores = model.shape_function("x2")
         assert len(scores) > 0
+
+
+# ---------------------------------------------------------------------------
+# Test 11: cv_lambda — lambda selection
+# ---------------------------------------------------------------------------
+
+class TestCVLambda:
+    """
+    cv_lambda() should:
+      - Return a fitted BoulevardEBM with lambda_ set to the best value.
+      - Populate cv_results_ with lambda_values and mean_cv_mse lists.
+      - Choose a lambda in the interior of the grid (not always the extreme).
+      - Set sigma_hat_oos_ to a positive float.
+      - Override sigma_hat_ with the OOS estimate.
+    """
+
+    def test_cv_lambda_returns_fitted_model(self):
+        X, y = _make_sine_data(n=400, seed=10)
+        model = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=np.logspace(-2, 2, 7),
+            n_folds=3,
+            n_estimators=200,
+            max_bins=32,
+        )
+        assert model._fitted
+
+    def test_cv_lambda_selects_reasonable_lambda(self):
+        """
+        On the sine DGP the best lambda should be in the interior of the
+        grid — neither the smallest (essentially unregularised, high variance)
+        nor the largest (completely shrunk to zero).  We test with a grid that
+        brackets reasonable values and assert the best is not at either extreme.
+        """
+        X, y = _make_sine_data(n=500, noise_std=0.2, seed=7)
+        grid = np.logspace(-2, 2, 9)
+        model = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=grid,
+            n_folds=3,
+            n_estimators=200,
+            max_bins=32,
+        )
+        # Best lambda must be strictly inside the grid (not first or last)
+        best = model.lambda_
+        assert best > grid[0], f"Best lambda {best:.4g} is the grid minimum {grid[0]:.4g}"
+        assert best < grid[-1], f"Best lambda {best:.4g} is the grid maximum {grid[-1]:.4g}"
+
+    def test_cv_results_structure(self):
+        X, y = _make_sine_data(n=300, seed=20)
+        grid = np.logspace(-1, 1, 5)
+        model = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=grid,
+            n_folds=3,
+            n_estimators=100,
+            max_bins=32,
+        )
+        assert model.cv_results_ is not None
+        assert "lambda_values" in model.cv_results_
+        assert "mean_cv_mse" in model.cv_results_
+        assert len(model.cv_results_["lambda_values"]) == len(grid)
+        assert len(model.cv_results_["mean_cv_mse"]) == len(grid)
+
+    def test_cv_results_mse_positive(self):
+        X, y = _make_sine_data(n=300, seed=21)
+        model = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=np.array([0.1, 1.0, 10.0]),
+            n_folds=3,
+            n_estimators=100,
+            max_bins=32,
+        )
+        for mse in model.cv_results_["mean_cv_mse"]:
+            assert mse > 0.0, f"CV MSE should be positive, got {mse}"
+
+    def test_cv_lambda_sets_sigma_hat_oos(self):
+        X, y = _make_sine_data(n=300, seed=22)
+        model = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=np.array([0.1, 1.0, 10.0]),
+            n_folds=3,
+            n_estimators=100,
+            max_bins=32,
+        )
+        assert model.sigma_hat_oos_ is not None
+        assert model.sigma_hat_oos_ > 0.0
+
+    def test_cv_lambda_sigma_hat_equals_oos(self):
+        """sigma_hat_ should be overridden to the OOS estimate."""
+        X, y = _make_sine_data(n=300, seed=23)
+        model = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=np.array([0.1, 1.0, 10.0]),
+            n_folds=3,
+            n_estimators=100,
+            max_bins=32,
+        )
+        assert model.sigma_hat_ == model.sigma_hat_oos_
+
+    def test_cv_lambda_default_sigma_hat_oos_is_none(self):
+        """Models fitted via .fit() should have sigma_hat_oos_ = None."""
+        X, y = _make_sine_data(n=200, seed=24)
+        model = BoulevardEBM(n_estimators=100, max_bins=32)
+        model.fit(X, y)
+        assert model.sigma_hat_oos_ is None
+
+    def test_cv_lambda_polars_input(self):
+        X_np, y = _make_sine_data(n=300, seed=25)
+        df = pl.DataFrame({"temperature": X_np[:, 0]})
+        model = BoulevardEBM.cv_lambda(
+            df, y,
+            lambda_grid=np.array([0.1, 1.0, 10.0]),
+            n_folds=3,
+            n_estimators=100,
+            max_bins=32,
+        )
+        assert model._fitted
+        assert model.feature_names_ == ["temperature"]
+
+
+# ---------------------------------------------------------------------------
+# Test 12: OOS sigma_hat is closer to true sigma than in-sample
+# ---------------------------------------------------------------------------
+
+class TestOOSSigmaHat:
+    """
+    The OOS sigma_hat from cv_lambda() should be closer to the true noise
+    standard deviation than the training-residual sigma_hat from plain fit().
+
+    The training residuals include both noise and KRR approximation error,
+    so sigma_hat from fit() is upward biased.  The OOS residuals only contain
+    noise plus generalisation error, and for a well-regularised model the
+    latter is small, so sigma_hat_oos should be closer to true_noise_std.
+
+    We test this on a DGP where true_noise_std = 0.2 and use n=600 so the
+    model can recover the signal reasonably well.
+    """
+
+    def test_oos_sigma_closer_to_true(self):
+        true_noise_std = 0.2
+        X, y = _make_sine_data(n=600, noise_std=true_noise_std, seed=99)
+
+        # In-sample sigma_hat from plain fit (known to be upward biased)
+        m_insample = BoulevardEBM(n_estimators=500, lambda_=1.0, max_bins=32, random_state=42)
+        m_insample.fit(X, y)
+        insample_sigma = m_insample.sigma_hat_
+
+        # OOS sigma_hat from cv_lambda
+        m_cv = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=np.logspace(-1, 1, 7),
+            n_folds=5,
+            n_estimators=300,
+            max_bins=32,
+            random_state=42,
+        )
+        oos_sigma = m_cv.sigma_hat_oos_
+
+        err_insample = abs(insample_sigma - true_noise_std)
+        err_oos = abs(oos_sigma - true_noise_std)
+
+        assert err_oos < err_insample, (
+            f"Expected OOS sigma ({oos_sigma:.4f}) to be closer to true "
+            f"sigma ({true_noise_std}) than in-sample sigma ({insample_sigma:.4f}). "
+            f"Errors: OOS={err_oos:.4f}, in-sample={err_insample:.4f}."
+        )
+
+    def test_oos_sigma_within_factor_of_two(self):
+        """OOS sigma_hat should be within 2x of true noise std."""
+        true_noise_std = 0.3
+        X, y = _make_sine_data(n=500, noise_std=true_noise_std, seed=88)
+        m_cv = BoulevardEBM.cv_lambda(
+            X, y,
+            lambda_grid=np.array([0.1, 0.5, 1.0, 2.0, 5.0]),
+            n_folds=4,
+            n_estimators=200,
+            max_bins=32,
+            random_state=0,
+        )
+        ratio = m_cv.sigma_hat_oos_ / true_noise_std
+        assert 0.5 <= ratio <= 2.0, (
+            f"OOS sigma_hat ratio = {ratio:.3f}, expected in [0.5, 2.0]. "
+            f"sigma_hat_oos={m_cv.sigma_hat_oos_:.4f}, true={true_noise_std}"
+        )

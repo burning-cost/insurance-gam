@@ -36,6 +36,7 @@ from typing import Optional, Union
 import numpy as np
 import polars as pl
 from scipy import linalg
+from sklearn.model_selection import KFold
 from sklearn.tree import DecisionTreeRegressor
 
 
@@ -113,7 +114,8 @@ class BoulevardEBM:
     lambda_ : float
         Ridge regularisation strength (λ in Algorithm 2).  Larger values
         shrink shape functions toward zero and produce narrower, more biased
-        CIs.  Default 1.0 is a sensible starting point; tune by CV.
+        CIs.  Default 1.0 is a sensible starting point; use cv_lambda() to
+        select automatically.
     max_bins : int
         Maximum number of equal-frequency bins per feature.  256 matches
         the interpretML / LightGBM default and gives a good resolution vs.
@@ -137,12 +139,22 @@ class BoulevardEBM:
     intercept_ : float
         Global intercept (mean of y after removing all shape contributions).
     sigma_hat_ : float
-        Estimated residual standard deviation (computed on training data
-        after fitting, used by BoulevardInference for SE calculation).
+        Estimated residual standard deviation used by BoulevardInference for
+        SE calculation.  Set from training residuals by fit(), but overridden
+        with the OOS estimate when cv_lambda() is used (see sigma_hat_oos_).
+    sigma_hat_oos_ : float or None
+        Out-of-sample residual standard deviation from the CV folds run by
+        cv_lambda().  None if cv_lambda() has not been called.  This estimate
+        is less biased than the training-residual version because it does not
+        include KRR approximation error.
     n_samples_ : int
         Number of training samples.
     bin_counts_ : list[np.ndarray]
         Number of training samples in each bin, one array per feature.
+    cv_results_ : dict or None
+        Cross-validation results from cv_lambda(), containing keys
+        ``lambda_values`` and ``mean_cv_mse``.  None if cv_lambda() has not
+        been called.
     """
 
     def __init__(
@@ -165,8 +177,10 @@ class BoulevardEBM:
         self.shape_scores_: list[np.ndarray] = []
         self.intercept_: float = 0.0
         self.sigma_hat_: float = 1.0
+        self.sigma_hat_oos_: Optional[float] = None
         self.n_samples_: int = 0
         self.bin_counts_: list[np.ndarray] = []
+        self.cv_results_: Optional[dict] = None
         self._fitted: bool = False
 
     # ------------------------------------------------------------------
@@ -281,6 +295,157 @@ class BoulevardEBM:
 
         self._fitted = True
         return self
+
+    # ------------------------------------------------------------------
+    # Cross-validation for lambda selection
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def cv_lambda(
+        cls,
+        X: Union[np.ndarray, "pl.DataFrame"],
+        y: Union[np.ndarray, list],
+        lambda_grid: Optional[np.ndarray] = None,
+        n_folds: int = 5,
+        n_estimators: int = 1000,
+        max_bins: int = 256,
+        min_samples_leaf: int = 20,
+        random_state: int = 42,
+    ) -> "BoulevardEBM":
+        """
+        Select the regularisation parameter lambda via k-fold cross-validation,
+        then refit on the full dataset.
+
+        For each candidate lambda, the model is fitted on (k-1) folds and
+        evaluated on the held-out fold using MSE.  The lambda with the lowest
+        mean CV MSE is selected.  The final model is then fitted to the full
+        dataset using that lambda.
+
+        Out-of-sample (OOS) residuals from the CV folds are used to compute
+        sigma_hat_ on the returned model.  This estimate is less biased than
+        the training-residual version because it does not include KRR
+        approximation error — see sigma_hat_oos_ vs sigma_hat_ for both values.
+
+        Parameters
+        ----------
+        X : np.ndarray or polars.DataFrame
+            Feature matrix, shape (n, p).
+        y : array-like
+            Target variable.
+        lambda_grid : np.ndarray, optional
+            1-D array of candidate lambda values.  Defaults to
+            ``np.logspace(-3, 3, 20)`` (20 values from 0.001 to 1000).
+        n_folds : int
+            Number of CV folds.  Default 5.
+        n_estimators : int
+            Boosting rounds for each CV fit.  Default 1000.
+        max_bins : int
+            Maximum bins per feature.  Default 256.
+        min_samples_leaf : int
+            Minimum leaf size for each stump.  Default 20.
+        random_state : int
+            Random seed for KFold splitting and stump fitting.
+
+        Returns
+        -------
+        BoulevardEBM
+            A new BoulevardEBM instance fitted on the full dataset with the
+            best lambda.  Two additional attributes are set:
+            - ``cv_results_`` : dict with keys ``lambda_values`` (list of
+              floats) and ``mean_cv_mse`` (list of floats).
+            - ``sigma_hat_oos_`` : float — OOS residual std from CV folds.
+              ``sigma_hat_`` is also overridden with this value so that
+              BoulevardInference uses the less-biased estimate automatically.
+
+        Examples
+        --------
+        >>> model = BoulevardEBM.cv_lambda(X_train, y_train)
+        >>> print(model.lambda_)   # best lambda chosen by CV
+        >>> print(model.cv_results_)
+        """
+        if lambda_grid is None:
+            lambda_grid = np.logspace(-3, 3, 20)
+
+        X_arr, _ = _to_numpy_2d(X)
+        y_arr = np.asarray(y, dtype=float)
+        n = len(y_arr)
+
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
+        folds = list(kf.split(X_arr))
+
+        mean_cv_mse: list[float] = []
+
+        for lam in lambda_grid:
+            fold_mses: list[float] = []
+            for train_idx, val_idx in folds:
+                X_tr, X_va = X_arr[train_idx], X_arr[val_idx]
+                y_tr, y_va = y_arr[train_idx], y_arr[val_idx]
+
+                m = cls(
+                    n_estimators=n_estimators,
+                    lambda_=float(lam),
+                    max_bins=max_bins,
+                    min_samples_leaf=min_samples_leaf,
+                    random_state=random_state,
+                )
+                m.fit(X_tr, y_tr)
+                preds_va = m.predict(X_va)
+                fold_mses.append(float(np.mean((y_va - preds_va) ** 2)))
+
+            mean_cv_mse.append(float(np.mean(fold_mses)))
+
+        best_idx = int(np.argmin(mean_cv_mse))
+        best_lambda = float(lambda_grid[best_idx])
+
+        # ------------------------------------------------------------------
+        # Collect OOS residuals at the best lambda for sigma_hat estimation.
+        # One pass through the folds collecting held-out predictions.
+        # ------------------------------------------------------------------
+        oos_residuals: list[np.ndarray] = []
+        for train_idx, val_idx in folds:
+            X_tr, X_va = X_arr[train_idx], X_arr[val_idx]
+            y_tr, y_va = y_arr[train_idx], y_arr[val_idx]
+
+            m = cls(
+                n_estimators=n_estimators,
+                lambda_=best_lambda,
+                max_bins=max_bins,
+                min_samples_leaf=min_samples_leaf,
+                random_state=random_state,
+            )
+            m.fit(X_tr, y_tr)
+            preds_va = m.predict(X_va)
+            oos_residuals.append(y_va - preds_va)
+
+        oos_res_all = np.concatenate(oos_residuals)
+        sigma_oos = float(np.sqrt(np.mean(oos_res_all ** 2)))
+
+        # ------------------------------------------------------------------
+        # Final fit on full dataset with best lambda
+        # ------------------------------------------------------------------
+        # Pass original X (may be polars) to preserve column names
+        final_model = cls(
+            n_estimators=n_estimators,
+            lambda_=best_lambda,
+            max_bins=max_bins,
+            min_samples_leaf=min_samples_leaf,
+            random_state=random_state,
+        )
+        final_model.fit(X, y)
+
+        # Store CV metadata
+        final_model.cv_results_ = {
+            "lambda_values": [float(lam) for lam in lambda_grid],
+            "mean_cv_mse": mean_cv_mse,
+        }
+
+        # Override sigma_hat_ with the OOS estimate — it is less biased.
+        # The training-based estimate is still accessible via the internal
+        # computation in fit(), but we prefer the OOS version here.
+        final_model.sigma_hat_oos_ = sigma_oos
+        final_model.sigma_hat_ = sigma_oos
+
+        return final_model
 
     # ------------------------------------------------------------------
     # Predict
@@ -402,6 +567,11 @@ class BoulevardInference:
 
     All matrices are at most 256 × 256, so inversion is O(m³) ≈ O(256³)
     per feature — a few milliseconds total.
+
+    When the model was fitted via cv_lambda(), sigma_hat_ reflects the OOS
+    residual standard deviation, which is less biased than the training
+    residual version.  CIs will be narrower and better calibrated in that
+    case.
 
     Parameters
     ----------
