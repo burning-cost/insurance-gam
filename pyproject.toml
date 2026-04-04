@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "insurance-gam"
-version = "0.5.1"
-description = "Interpretable GAM toolkit for insurance pricing — EBM, Neural Additive Models, Pairwise Interaction Networks, Post-selection GLM Inference, Debiased GLM CIs, and PenalizedGLMInference"
+version = "0.5.2"
+description = "Interpretable GAM toolkit for insurance pricing: EBM, Neural Additive Models, Pairwise Interaction Networks, and debiased post-selection GLM inference for UK actuarial modelling."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -14,18 +14,32 @@ keywords = [
     "insurance",
     "pricing",
     "actuarial",
+    "UK",
+    "personal lines",
     "GAM",
+    "generalised additive model",
+    "generalized additive model",
     "EBM",
-    "neural-additive-model",
-    "interpretable-ml",
-    "pairwise-interactions",
-    "ga2m",
-    "poisson",
+    "explainable boosting machine",
+    "neural additive model",
+    "NAM",
+    "interpretable machine learning",
+    "interpretable ml",
+    "explainable AI",
+    "xai",
+    "pairwise interactions",
+    "GA2M",
+    "poisson regression",
     "tweedie",
-    "post-selection-inference",
+    "GLM",
+    "post-selection inference",
     "lasso",
-    "debiased-lasso",
-    "confidence-intervals",
+    "debiased lasso",
+    "confidence intervals",
+    "relativity",
+    "rating factor",
+    "partial dependence",
+    "SHAP",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -36,6 +50,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Mathematics",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Office/Business :: Financial",
@@ -85,11 +100,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://burning-cost.github.io/"
+Homepage = "https://burning-cost.github.io/libraries/insurance-gam/"
+Documentation = "https://burning-cost.github.io/libraries/insurance-gam/"
 Repository = "https://github.com/burning-cost/insurance-gam"
-Changelog = "https://github.com/burning-cost/insurance-gam/releases"
-Documentation = "https://burning-cost.github.io/insurance-gam"
 "Bug Tracker" = "https://github.com/burning-cost/insurance-gam/issues"
+Changelog = "https://github.com/burning-cost/insurance-gam/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/insurance_gam"]
