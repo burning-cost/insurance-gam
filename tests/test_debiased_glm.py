@@ -31,6 +31,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("statsmodels")  # skip if optional glm extra not installed
+
 from insurance_gam.debiased_glm import DebiasedGLM
 
 
